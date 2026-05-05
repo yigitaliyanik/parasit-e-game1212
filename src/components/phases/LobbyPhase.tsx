@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useGameSession } from "@/hooks/useGameSession";
 import { Role } from "@/lib/types";
 import { Zap, Activity, Shield, Search, Loader2, Copy, Check } from "lucide-react";
@@ -120,8 +121,11 @@ const BarcodeSVG = ({ isSelected, colorClass }: { isSelected: boolean, colorClas
 );
 
 export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
-  const { session, currentUser, currentPlayer, selectRole, toggleReady, updateGameStatus } = useGameSession(roomId);
+  const router = useRouter();
+  const { session, currentUser, currentPlayer, selectRole, toggleReady, updateGameStatus, randomizeRoles, lockRoles, leaveLobby } = useGameSession(roomId);
   const [copied, setCopied] = useState(false);
+  const [notifications, setNotifications] = useState<{id: string, msg: string}[]>([]);
+  const prevPlayersRef = useRef<Record<string, any>>({});
 
   // Generate a random stable PRST ID for the cards based on roomId so it doesn't flicker
   const prstId = useMemo(() => {
@@ -131,6 +135,34 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
     }
     return Math.abs(hash).toString().padStart(6, '0').substring(0, 6);
   }, [roomId]);
+
+  useEffect(() => {
+    if (!session?.players) return;
+    const currentPlayers = session.players;
+    const prevPlayers = prevPlayersRef.current;
+    const currentIds = Object.keys(currentPlayers);
+    const prevIds = Object.keys(prevPlayers);
+    const joined = currentIds.filter(id => !prevIds.includes(id));
+    const left = prevIds.filter(id => !currentIds.includes(id));
+
+    const newNotifs: {id: string, msg: string}[] = [];
+    if (prevIds.length > 0) {
+      joined.forEach(id => {
+        if (id !== currentUser?.id) newNotifs.push({ id: Date.now() + Math.random().toString(), msg: `[${currentPlayers[id].name}] has joined the lobby` });
+      });
+      left.forEach(id => {
+        if (id !== currentUser?.id) newNotifs.push({ id: Date.now() + Math.random().toString(), msg: `[${prevPlayers[id].name}] has left the lobby` });
+      });
+    }
+
+    if (newNotifs.length > 0) {
+      setNotifications(prev => [...prev, ...newNotifs]);
+      newNotifs.forEach(n => {
+        setTimeout(() => setNotifications(prev => prev.filter(x => x.id !== n.id)), 4000);
+      });
+    }
+    prevPlayersRef.current = currentPlayers;
+  }, [session?.players, currentUser?.id]);
 
   if (!session || !currentUser || !currentPlayer) {
     return (
@@ -157,23 +189,37 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
     }
   };
 
+  const handleLeaveLobby = async () => {
+    await leaveLobby();
+    router.push('/');
+  };
+
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 p-6 md:p-12 flex flex-col font-sans relative overflow-hidden">
       {/* Background Decor */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.03),transparent_50%)] pointer-events-none" />
 
       {/* Header & Player List */}
-      <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-8">
-        <div>
-          <div className="flex items-center gap-4 mb-4">
-            <h1 className="text-4xl font-black uppercase tracking-widest text-slate-100">Parasit[e]</h1>
-            <div className="h-4 w-[1px] bg-slate-700" />
+      <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-8 w-full max-w-7xl mx-auto">
+        <div className="flex-grow">
+          <div className="flex items-center justify-between mb-4 w-full">
+            <div className="flex items-center gap-4">
+              <h1 className="text-4xl font-black uppercase tracking-widest text-slate-100">Parasit[e]</h1>
+              <div className="h-4 w-[1px] bg-slate-700" />
+              <button 
+                onClick={copyCode}
+                className="flex items-center gap-2 text-slate-400 hover:text-emerald-400 transition-colors font-mono text-sm tracking-widest"
+              >
+                <span>ID: {roomId}</span>
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+            
             <button 
-              onClick={copyCode}
-              className="flex items-center gap-2 text-slate-400 hover:text-emerald-400 transition-colors font-mono text-sm tracking-widest"
+              onClick={handleLeaveLobby}
+              className="px-4 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/30 rounded font-mono text-xs uppercase tracking-widest transition-colors"
             >
-              <span>ID: {roomId}</span>
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              Leave Lobby
             </button>
           </div>
 
@@ -197,6 +243,36 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
             ))}
           </div>
         </div>
+        
+        {currentPlayer.isHost && (
+          <div className="flex flex-col gap-2 min-w-[200px]">
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono mb-1">Host Controls</span>
+            <button 
+              onClick={randomizeRoles}
+              disabled={session.rolesLocked || (session.randomizeCount || 0) >= 2}
+              className={clsx(
+                "px-4 py-2 border rounded font-mono text-xs uppercase tracking-widest transition-all",
+                session.rolesLocked || (session.randomizeCount || 0) >= 2
+                  ? "bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed"
+                  : "bg-indigo-950/40 hover:bg-indigo-900/60 border-indigo-500/30 text-indigo-400"
+              )}
+            >
+              Randomize Roles ({2 - (session.randomizeCount || 0)})
+            </button>
+            <button 
+              onClick={lockRoles}
+              disabled={session.rolesLocked}
+              className={clsx(
+                "px-4 py-2 border rounded font-mono text-xs uppercase tracking-widest transition-all",
+                session.rolesLocked
+                  ? "bg-slate-900/50 border-slate-800 text-slate-600 cursor-not-allowed"
+                  : "bg-amber-950/40 hover:bg-amber-900/60 border-amber-500/30 text-amber-400"
+              )}
+            >
+              {session.rolesLocked ? "Roles Locked" : "Lock Roles"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ID Cards Layout */}
@@ -313,6 +389,15 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
         <p className="text-slate-500 font-mono text-[10px] tracking-widest uppercase mt-4">
           Verify your status to start the mission.
         </p>
+      </div>
+
+      {/* Notifications Area */}
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+        {notifications.map(n => (
+           <div key={n.id} className="bg-slate-900/90 border border-slate-700 text-slate-300 px-4 py-3 rounded shadow-lg font-mono text-xs uppercase tracking-widest animate-in fade-in slide-in-from-bottom-5">
+             {n.msg}
+           </div>
+        ))}
       </div>
     </div>
   );

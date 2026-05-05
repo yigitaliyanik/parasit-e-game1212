@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ref, onValue, set, update, get, increment } from 'firebase/database';
+import { ref, onValue, set, update, get, increment, onDisconnect } from 'firebase/database';
 import { db, auth, signInAnonymousUser } from '@/lib/firebase';
 import { GameSession, Player, Role, GameStatus } from '@/lib/types';
 
@@ -28,7 +28,19 @@ export const useGameSession = (roomId: string) => {
 
         unsubscribe = onValue(sessionRef, (snapshot) => {
           if (snapshot.exists()) {
-            setSession(snapshot.val() as GameSession);
+            const data = snapshot.val() as GameSession;
+            setSession(data);
+            
+            // Host Migration logic
+            if (data.players) {
+              const hasHost = Object.values(data.players).some(p => p.isHost);
+              if (!hasHost && data.players[user.uid]) {
+                const sortedIds = Object.keys(data.players).sort();
+                if (sortedIds[0] === user.uid) {
+                  update(ref(db, `sessions/${roomId}/players/${user.uid}`), { isHost: true });
+                }
+              }
+            }
           } else {
             setSession(null);
           }
@@ -88,13 +100,17 @@ export const useGameSession = (roomId: string) => {
       } else {
         throw new Error("Operation code not found");
       }
+
+      // Setup presence cleanup
+      const playerRef = ref(db, `sessions/${roomId}/players/${currentUser.id}`);
+      await onDisconnect(playerRef).remove();
     } catch (err: any) {
       throw err;
     }
   }, [currentUser, roomId]);
 
   const selectRole = async (role: Role) => {
-    if (!currentUser || !session) return;
+    if (!currentUser || !session || session.rolesLocked) return;
     try {
       if (session.players[currentUser.id]?.role === role) {
         await update(ref(db, `sessions/${roomId}/players/${currentUser.id}`), { role: null });
@@ -162,31 +178,55 @@ export const useGameSession = (roomId: string) => {
     }
   };
 
+  const leaveLobby = async () => {
+    if (!currentUser) return;
+    try {
+      const playerRef = ref(db, `sessions/${roomId}/players/${currentUser.id}`);
+      await onDisconnect(playerRef).cancel();
+      await set(playerRef, null);
+    } catch (err) {
+      console.error("[useGameSession] Error leaving lobby:", err);
+    }
+  };
+
+  const lockRoles = async () => {
+    if (!session) return;
+    try {
+      await update(ref(db, `sessions/${roomId}`), { rolesLocked: true });
+    } catch (err) {
+      console.error("[useGameSession] Error locking roles:", err);
+    }
+  };
+
   const randomizeRoles = async () => {
     if (!session || !session.players) return;
     try {
-      const availableRoles: Role[] = ["engineer", "analyst", "executive", "journalist"];
-      const currentPlayers = Object.values(session.players);
-      const assignedRoles = currentPlayers.map(p => p.role).filter((r): r is Role => r !== null);
-      const remainingRoles = availableRoles.filter(r => !assignedRoles.includes(r));
+      const sessionRef = ref(db, `sessions/${roomId}`);
+      const snapshot = await get(sessionRef);
+      const currentData = snapshot.val() as GameSession;
+      
+      const count = currentData.randomizeCount || 0;
+      if (count >= 2 || currentData.rolesLocked) return;
 
-      for (let i = remainingRoles.length - 1; i > 0; i--) {
+      const availableRoles: Role[] = ["engineer", "analyst", "executive", "journalist"];
+      const currentPlayers = Object.values(currentData.players || {});
+      
+      for (let i = availableRoles.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [remainingRoles[i], remainingRoles[j]] = [remainingRoles[j], remainingRoles[i]];
+        [availableRoles[i], availableRoles[j]] = [availableRoles[j], availableRoles[i]];
       }
 
       const updates: Record<string, any> = {};
-      let roleIndex = 0;
-      currentPlayers.forEach(player => {
-        if (!player.role && roleIndex < remainingRoles.length) {
-          updates[`${player.id}/role`] = remainingRoles[roleIndex];
-          roleIndex++;
-        }
+      currentPlayers.forEach((player, index) => {
+        updates[`players/${player.id}/role`] = availableRoles[index];
       });
-
-      if (Object.keys(updates).length > 0) {
-        await update(ref(db, `sessions/${roomId}/players`), updates);
+      
+      updates['randomizeCount'] = count + 1;
+      if (count === 1) {
+         updates['rolesLocked'] = true;
       }
+
+      await update(sessionRef, updates);
     } catch (err) {
       console.error("[useGameSession] Error randomizing roles:", err);
     }
@@ -205,6 +245,8 @@ export const useGameSession = (roomId: string) => {
     toggleReady,
     updateGameStatus,
     randomizeRoles,
+    lockRoles,
+    leaveLobby,
     incrementGenerator,
     
     setMission1Ready: async (ready: boolean) => {

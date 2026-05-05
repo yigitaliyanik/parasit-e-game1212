@@ -16,8 +16,9 @@ export interface GameSession {
   generatorProgress: number;       // 0–100, collaborative Ice Breaker
   isSystemOnline: boolean;         // Triggers Mission 1 Briefing
   startTime?: number;              // Set only when Mission 1 is complete
-  
   // Mission 1 Coordination
+  randomizeCount?: number;          // 0-2 limit for host
+  rolesLocked?: boolean;            // true if roles are locked
   authStatus?: Record<string, "pending" | "completed">; // Access Sync
   mission1Ready?: Record<string, boolean>; // Map of playerId to ready status
   mission1Status?: "briefing" | "in_progress" | "gear_puzzle" | "authorizing" | "repairing" | "complete";
