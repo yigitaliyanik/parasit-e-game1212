@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, onValue, set, update, get, increment, onDisconnect } from 'firebase/database';
-import { db, auth, signInAnonymousUser } from '@/lib/firebase';
+import { db, signInAnonymousUser } from '@/lib/firebase';
 import { GameSession, Player, Role, GameStatus } from '@/lib/types';
 
 export const useGameSession = (roomId: string) => {
@@ -49,8 +49,9 @@ export const useGameSession = (roomId: string) => {
           setError(`Failed to sync game state: ${err.message}`);
           setLoading(false);
         });
-      } catch (err: any) {
-        setError(`Failed to authenticate: ${err.message}`);
+      } catch (err) {
+        const error = err as Error;
+        setError(`Failed to authenticate: ${error.message}`);
         setLoading(false);
       }
     };
@@ -104,7 +105,7 @@ export const useGameSession = (roomId: string) => {
       // Setup presence cleanup
       const playerRef = ref(db, `sessions/${roomId}/players/${currentUser.id}`);
       await onDisconnect(playerRef).remove();
-    } catch (err: any) {
+    } catch (err) {
       throw err;
     }
   }, [currentUser, roomId]);
@@ -216,7 +217,7 @@ export const useGameSession = (roomId: string) => {
         [availableRoles[i], availableRoles[j]] = [availableRoles[j], availableRoles[i]];
       }
 
-      const updates: Record<string, any> = {};
+      const updates: Record<string, string | number | boolean | null> = {};
       currentPlayers.forEach((player, index) => {
         updates[`players/${player.id}/role`] = availableRoles[index];
       });
@@ -286,6 +287,14 @@ export const useGameSession = (roomId: string) => {
         mission1Status: "briefing",
         startTime: Date.now()
       });
-    }
+    },
+
+    setBriefingReady: async (role: string, ready: boolean) => {
+      if (!session) return;
+      const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
+      await update(ref(db, `sessions/${roomId}/briefingReady`), {
+        [capitalizedRole]: ready
+      });
+    },
   };
 };

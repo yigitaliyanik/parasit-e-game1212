@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, User } from "lucide-react";
-import clsx from "clsx";
 
 type IntroPhase = "boot" | "glitch" | "main";
 
@@ -19,31 +18,45 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const skipIntro = () => {
+    setIntroPhase("main");
+    sessionStorage.setItem("parasite_intro_seen", "true");
+  };
+
   useEffect(() => {
-    setMounted(true);
-    const storedName = localStorage.getItem("eco_player_name");
-    if (storedName) setAlias(storedName);
+    // Hydration fix: defer mounting to client-side only
+    const mountTimeout = setTimeout(() => {
+      setMounted(true);
+      
+      const storedName = localStorage.getItem("eco_player_name");
+      if (storedName) setAlias(storedName);
 
-    // Intro sequence logic
-    const hasSeenIntro = sessionStorage.getItem("parasite_intro_seen");
-    if (hasSeenIntro) {
-      setIntroPhase("main");
-      return;
-    }
-
-    // Phase 1: Terminal Boot (0-2s)
-    const t1 = setTimeout(() => setBootStep(1), 400); // BOOTING SYSTEM...
-    const t2 = setTimeout(() => setBootStep(2), 900); // LOADING PROTOCOLS...
-    const t3 = setTimeout(() => setBootStep(3), 1400); // ERROR
+      // Intro sequence logic
+      const hasSeenIntro = sessionStorage.getItem("parasite_intro_seen");
+      if (hasSeenIntro) {
+        setIntroPhase("main");
+      }
+    }, 0);
     
-    // Phase 2: Glitch Reveal (2s-3.5s)
-    const t4 = setTimeout(() => setIntroPhase("glitch"), 2000);
+    // Intro sequence logic (continued)
+    const hasSeenIntro = sessionStorage.getItem("parasite_intro_seen");
+    let t1: NodeJS.Timeout, t2: NodeJS.Timeout, t3: NodeJS.Timeout, t4: NodeJS.Timeout, t5: NodeJS.Timeout;
 
-    // Phase 3: Main UI (3.5s+)
-    const t5 = setTimeout(() => {
-      setIntroPhase("main");
-      sessionStorage.setItem("parasite_intro_seen", "true");
-    }, 3500);
+    if (!hasSeenIntro) {
+      // Phase 1: Terminal Boot (0-2s)
+      t1 = setTimeout(() => setBootStep(1), 400); // BOOTING SYSTEM...
+      t2 = setTimeout(() => setBootStep(2), 900); // LOADING PROTOCOLS...
+      t3 = setTimeout(() => setBootStep(3), 1400); // ERROR
+      
+      // Phase 2: Glitch Reveal (2s-3.5s)
+      t4 = setTimeout(() => setIntroPhase("glitch"), 2000);
+
+      // Phase 3: Main UI (3.5s+)
+      t5 = setTimeout(() => {
+        setIntroPhase("main");
+        sessionStorage.setItem("parasite_intro_seen", "true");
+      }, 3500);
+    }
 
     // Allow escape to skip
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -52,17 +65,13 @@ export default function Home() {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      clearTimeout(mountTimeout);
       clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
   if (!mounted) return null;
-
-  const skipIntro = () => {
-    setIntroPhase("main");
-    sessionStorage.setItem("parasite_intro_seen", "true");
-  };
 
   const saveAlias = (name: string) => {
     localStorage.setItem("eco_player_name", name.trim());

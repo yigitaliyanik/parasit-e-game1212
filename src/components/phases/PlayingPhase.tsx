@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useGameSession } from "@/hooks/useGameSession";
-import { Zap, Activity, Shield, Search, Cpu, Power, AlertCircle, Terminal as TerminalIcon, CheckCircle2, XCircle, Settings, Lock } from "lucide-react";
+import { GameSession, Player } from "@/lib/types";
+import { Zap, Activity, Shield, Search, Cpu, AlertCircle, Terminal as TerminalIcon, CheckCircle2, Settings, Lock } from "lucide-react";
 import clsx from "clsx";
 
 interface PlayingPhaseProps {
@@ -35,7 +36,6 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
   const { 
     session, 
     currentPlayer, 
-    incrementGenerator, 
     setMission1Ready, 
     updateMission1Status, 
     updateMission1Data,
@@ -45,10 +45,8 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
   } = useGameSession(roomId);
   
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [glitching, setGlitching] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [localRepairProgress, setLocalRepairProgress] = useState(0);
-  const prevOnline = useRef(false);
   const prevStatus = useRef<string | undefined>(undefined);
 
   // Countdown logic with penalty
@@ -78,15 +76,11 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
     
     // Dramatic Reveal of Mission Complete
     if (session.mission1Status === "complete" && prevStatus.current !== "complete") {
-      setGlitching(true);
-      setTimeout(() => {
-        setShowTimer(true);
-        setGlitching(false);
-      }, 2000);
+      setShowTimer(true);
     }
     
     prevStatus.current = session.mission1Status;
-  }, [session?.mission1Status]);
+  }, [session]);
 
   // Executive Repairing Bar
   useEffect(() => {
@@ -104,15 +98,15 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
           return next;
         });
       }, 100);
-      return () => clearInterval(interval);
-    } else {
-      setLocalRepairProgress(0);
+      return () => {
+        clearInterval(interval);
+        setLocalRepairProgress(0);
+      };
     }
-  }, [session?.mission1Status, currentPlayer?.role]);
+  }, [session?.mission1Status, currentPlayer?.role, updateMission1Status]);
 
   if (!session || !currentPlayer) return null;
 
-  const progress = Math.min(100, session.generatorProgress ?? 0);
   const isOnline = session.isSystemOnline;
   const role = currentPlayer.role;
   const RoleIcon = role ? ROLE_ICONS[role] : null;
@@ -350,7 +344,7 @@ function AnalystUI() {
               <span className="text-white font-bold uppercase tracking-widest text-sm">{loc}</span>
             </div>
             <div className="h-1 w-24 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-[#3b82f6] opacity-40 animate-pulse" style={{ width: `${Math.random() * 60 + 20}%` }} />
+              <div className="h-full bg-[#3b82f6] opacity-40 animate-pulse" style={{ width: `${(i * 7 + 23) % 60 + 20}%` }} />
             </div>
           </div>
         ))}
@@ -359,7 +353,14 @@ function AnalystUI() {
   );
 }
 
-function EngineerUI({ session, updateMission1Data, applyPenalty, updateMission1Status }: any) {
+interface EngineerUIProps {
+  session: GameSession;
+  updateMission1Data: (data: Partial<GameSession>) => Promise<void>;
+  applyPenalty: (seconds: number) => Promise<void>;
+  updateMission1Status: (status: GameSession['mission1Status']) => Promise<void>;
+}
+
+function EngineerUI({ session, updateMission1Data, applyPenalty, updateMission1Status }: EngineerUIProps) {
   const [selected, setSelected] = useState<string[]>(session.selectedLocations || []);
   const [isGlitching, setIsGlitching] = useState(false);
 
@@ -438,7 +439,12 @@ function EngineerUI({ session, updateMission1Data, applyPenalty, updateMission1S
   );
 }
 
-function GearPuzzle({ updateMission1Status, applyPenalty }: any) {
+interface GearPuzzleProps {
+  updateMission1Status: (status: GameSession['mission1Status']) => Promise<void>;
+  applyPenalty: (seconds: number) => Promise<void>;
+}
+
+function GearPuzzle({ updateMission1Status, applyPenalty }: GearPuzzleProps) {
   const [gears, setGears] = useState([
     { id: 1, pos: { x: 50, y: 350 }, color: '#00ff9d' },
     { id: 2, pos: { x: 150, y: 350 }, color: '#3b82f6' },
@@ -557,7 +563,12 @@ function GearPuzzle({ updateMission1Status, applyPenalty }: any) {
   );
 }
 
-function ExecutiveUI({ session, updateMission1Status }: any) {
+interface ExecutiveUIProps {
+  session: GameSession;
+  updateMission1Status: (status: GameSession['mission1Status']) => Promise<void>;
+}
+
+function ExecutiveUI({ session, updateMission1Status }: ExecutiveUIProps) {
   const isAuthorized = session.mission1Status === "authorizing" || session.mission1Status === "repairing";
 
   return (
@@ -586,26 +597,25 @@ function ExecutiveUI({ session, updateMission1Status }: any) {
   );
 }
 
-function AccessSyncPhase({ session, currentPlayer, setAuthStatus, setSystemOnline }: any) {
+const ROLE_PREFIXES: Record<string, string> = {
+  engineer: "ENGR",
+  analyst: "ANLY",
+  executive: "EXEC",
+  journalist: "JRNL"
+};
+
+function AccessSyncPhase({ session, currentPlayer, setAuthStatus, setSystemOnline }: {
+  session: GameSession;
+  currentPlayer: Player;
+  setAuthStatus: (status: 'pending' | 'completed') => Promise<void>;
+  setSystemOnline: () => Promise<void>;
+}) {
   const [isInserted, setIsInserted] = useState(false);
   const [inputCode, setInputCode] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
   const [errorGlitch, setErrorGlitch] = useState(false);
 
   const role = currentPlayer.role || 'engineer';
-  const rolePrefixes: Record<string, string> = {
-    engineer: "ENGR",
-    analyst: "ANLY",
-    executive: "EXEC",
-    journalist: "JRNL"
-  };
-
-  useEffect(() => {
-    if (isInserted && !generatedCode) {
-      const code = `${rolePrefixes[role]}-${Math.floor(100 + Math.random() * 900)}`;
-      setGeneratedCode(code);
-    }
-  }, [isInserted, role, generatedCode, rolePrefixes]);
 
   const authCount = Object.values(session.authStatus || {}).filter(s => s === 'completed').length;
   const progressPercent = (authCount / 4) * 100;
@@ -619,6 +629,10 @@ function AccessSyncPhase({ session, currentPlayer, setAuthStatus, setSystemOnlin
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsInserted(true);
+    if (!generatedCode) {
+      const code = `${ROLE_PREFIXES[role]}-${Math.floor(100 + Math.random() * 900)}`;
+      setGeneratedCode(code);
+    }
   };
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -704,8 +718,8 @@ function AccessSyncPhase({ session, currentPlayer, setAuthStatus, setSystemOnlin
                  <span className="text-white text-xl font-black uppercase tracking-widest">{role}</span>
                  <div className="w-full h-12 mt-4 bg-white/80 rounded flex items-center justify-center overflow-hidden">
                     <div className="w-full h-full flex gap-1 justify-center items-stretch px-2 opacity-80 mix-blend-multiply">
-                       {[...Array(20)].map((_, i) => (
-                         <div key={i} className="bg-black" style={{ width: Math.random() * 4 + 1 + 'px' }} />
+                        {[...Array(20)].map((_, i) => (
+                         <div key={i} className="bg-black" style={{ width: (i % 4 + 1) + 'px' }} />
                        ))}
                     </div>
                  </div>

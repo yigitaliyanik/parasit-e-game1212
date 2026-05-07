@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useGameSession } from "@/hooks/useGameSession";
 import LobbyPhase from "@/components/phases/LobbyPhase";
+import BriefingPhase from "@/components/phases/BriefingPhase";
 import PlayingPhase from "@/components/phases/PlayingPhase";
 import { Loader2 } from "lucide-react";
 
@@ -23,7 +24,7 @@ export default function RoomPage() {
     if (currentUser && !hasJoined && !error) {
       joinRoom(isHost)
         .then(() => setHasJoined(true))
-        .catch((err: any) => setInitError(err.message || "Failed to join room."));
+        .catch((err: Error) => setInitError(err.message || "Failed to join room."));
     }
   }, [hasJoined, joinRoom, isHost, currentUser, error]);
 
@@ -57,6 +58,8 @@ export default function RoomPage() {
   switch (session.gameStatus) {
     case "waiting":
       return <LobbyPhase roomId={roomId} />;
+    case "briefing":
+      return <BriefingPhase roomId={roomId} />;
     case "playing":
       return <PlayingPhase roomId={roomId} />;
     default:

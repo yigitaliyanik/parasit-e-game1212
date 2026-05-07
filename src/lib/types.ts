@@ -1,4 +1,4 @@
-export type GameStatus = "waiting" | "playing";
+export type GameStatus = "waiting" | "briefing" | "playing";
 export type Role = "engineer" | "analyst" | "executive" | "journalist";
 
 export interface Player {
@@ -21,6 +21,7 @@ export interface GameSession {
   rolesLocked?: boolean;            // true if roles are locked
   authStatus?: Record<string, "pending" | "completed">; // Access Sync
   mission1Ready?: Record<string, boolean>; // Map of playerId to ready status
+  briefingReady?: Record<string, boolean>; // Map of role to ready status
   mission1Status?: "briefing" | "in_progress" | "gear_puzzle" | "authorizing" | "repairing" | "complete";
   
   // Mission 1 Logic

@@ -11,7 +11,23 @@ interface LobbyPhaseProps {
   roomId: string;
 }
 
-const ROLES: { id: Role; name: string; icon: React.ElementType; theme: any }[] = [
+interface RoleTheme {
+  text: string;
+  border: string;
+  bgHover: string;
+  bgSelected: string;
+  shadowIdle: string;
+  shadowSelected: string;
+  iconDropShadow: string;
+  barcodeFill: string;
+  tagBg: string;
+  idleGlow: string;
+  iconBgSelected: string;
+  iconHover: string;
+  borderHover: string;
+}
+
+const ROLES: { id: Role; name: string; icon: React.ElementType; theme: RoleTheme }[] = [
   { 
     id: "journalist", 
     name: "JOURNALIST", 
@@ -125,7 +141,7 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
   const { session, currentUser, currentPlayer, selectRole, toggleReady, updateGameStatus, randomizeRoles, lockRoles, leaveLobby } = useGameSession(roomId);
   const [copied, setCopied] = useState(false);
   const [notifications, setNotifications] = useState<{id: string, msg: string}[]>([]);
-  const prevPlayersRef = useRef<Record<string, any>>({});
+  const prevPlayersRef = useRef<Record<string, Player>>({});
 
   // Generate a random stable PRST ID for the cards based on roomId so it doesn't flicker
   const prstId = useMemo(() => {
@@ -183,7 +199,7 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
 
   const handlePrimaryAction = () => {
     if (allReady && currentPlayer.isHost) {
-      updateGameStatus("playing");
+      updateGameStatus("briefing");
     } else {
       toggleReady();
     }
