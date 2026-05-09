@@ -1,0 +1,40 @@
+
+/Users/mehmetyanik/parasit(e)/.vercel/output/functions/_global-error.rsc.func/___next_launcher.cjs
+  11:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  46:18  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+/Users/mehmetyanik/parasit(e)/.vercel/output/functions/favicon.ico.rsc.func/___next_launcher.cjs
+  11:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  46:18  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+/Users/mehmetyanik/parasit(e)/.vercel/output/functions/room/[roomId].func/___next_launcher.cjs
+  11:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  46:18  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+/Users/mehmetyanik/parasit(e)/.vercel/output/static/_next/static/chunks/03~yq9q893hmn.js
+  1:24343   error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:32078   error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:46535   error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:81805   error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:88512   error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:100889  error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:101232  error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:101754  error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:102302  error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:102723  error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+
+/Users/mehmetyanik/parasit(e)/.vercel/output/static/_next/static/chunks/0qasishp5r5da.js
+  1:1231    error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:3616    error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:5339    error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:5996    error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:6650    error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:84366   error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:84605   error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:84763   error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:85280   error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:101921  error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+  1:155337  error  Unexpected aliasing of 'this' to local variable  @typescript-eslint/no-this-alias
+
+✖ 27 problems (27 errors, 0 warnings)
+

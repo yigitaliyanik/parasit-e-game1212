@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useGameSession } from "@/hooks/useGameSession";
-import { Role } from "@/lib/types";
+import { Role, Player } from "@/lib/types";
 import { Zap, Activity, Shield, Search, Loader2, Copy, Check } from "lucide-react";
 import clsx from "clsx";
 

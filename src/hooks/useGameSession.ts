@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, onValue, set, update, get, increment, onDisconnect } from 'firebase/database';
 import { db, signInAnonymousUser } from '@/lib/firebase';
-import { GameSession, Player, Role, GameStatus } from '@/lib/types';
+import { GameSession, Player, Role, GameStatus, TRANSFORMER_DATA } from '@/lib/types';
 
 export const useGameSession = (roomId: string) => {
   const [session, setSession] = useState<GameSession | null>(null);
@@ -144,7 +144,6 @@ export const useGameSession = (roomId: string) => {
   const updateGameStatus = async (status: GameStatus) => {
     if (!session) return;
     try {
-      // Note: startTime is NOT set here — it is only set when isSystemOnline triggers
       await update(ref(db, `sessions/${roomId}`), { gameStatus: status });
     } catch (err) {
       console.error("[useGameSession] Error updating game status:", err);
@@ -233,6 +232,104 @@ export const useGameSession = (roomId: string) => {
     }
   };
 
+  // ─── NEW: Countdown Alert & Timer ───────────────────────────────────
+
+  const startCountdownAlert = async () => {
+    if (!session) return;
+    try {
+      await update(ref(db, `sessions/${roomId}`), {
+        gameStatus: "countdown_alert",
+        startTime: Date.now(),
+      });
+    } catch (err) {
+      console.error("[useGameSession] Error starting countdown alert:", err);
+    }
+  };
+
+  const startPlaying = async () => {
+    if (!session) return;
+    try {
+      await update(ref(db, `sessions/${roomId}`), {
+        gameStatus: "playing",
+        task1: {
+          analystFoundIds: [],
+          executiveAuthorized: [],
+          engineerRepaired: [],
+          wrongAttempts: 0,
+        },
+      });
+    } catch (err) {
+      console.error("[useGameSession] Error starting playing phase:", err);
+    }
+  };
+
+  // ─── NEW: Task 1 Methods ───────────────────────────────────────────
+
+  const submitAnalystId = async (id: string): Promise<boolean> => {
+    if (!session) return false;
+    try {
+      const validIds: string[] = TRANSFORMER_DATA.map(t => t.id);
+      const alreadyFound = session.task1?.analystFoundIds || [];
+
+      if (validIds.includes(id) && !alreadyFound.includes(id)) {
+        // Correct ID
+        await update(ref(db, `sessions/${roomId}/task1`), {
+          analystFoundIds: [...alreadyFound, id],
+        });
+        return true;
+      } else if (!validIds.includes(id)) {
+        // Wrong ID — apply penalty
+        const currentWrong = session.task1?.wrongAttempts || 0;
+        await update(ref(db, `sessions/${roomId}`), {
+          "task1/wrongAttempts": currentWrong + 1,
+          penaltyTime: (session.penaltyTime || 0) + 30,
+        });
+        return false;
+      }
+      return false; // Already found
+    } catch (err) {
+      console.error("[useGameSession] Error submitting analyst ID:", err);
+      return false;
+    }
+  };
+
+  const authorizeRepair = async (transformerId: string) => {
+    if (!session) return;
+    try {
+      const alreadyAuthorized = session.task1?.executiveAuthorized || [];
+      if (alreadyAuthorized.includes(transformerId)) return;
+      await update(ref(db, `sessions/${roomId}/task1`), {
+        executiveAuthorized: [...alreadyAuthorized, transformerId],
+      });
+    } catch (err) {
+      console.error("[useGameSession] Error authorizing repair:", err);
+    }
+  };
+
+  const completeRepair = async (transformerId: string) => {
+    if (!session) return;
+    try {
+      const alreadyRepaired = session.task1?.engineerRepaired || [];
+      if (alreadyRepaired.includes(transformerId)) return;
+      await update(ref(db, `sessions/${roomId}/task1`), {
+        engineerRepaired: [...alreadyRepaired, transformerId],
+      });
+    } catch (err) {
+      console.error("[useGameSession] Error completing repair:", err);
+    }
+  };
+
+  const setGameOver = async () => {
+    if (!session) return;
+    try {
+      await update(ref(db, `sessions/${roomId}`), { gameStatus: "game_over" });
+    } catch (err) {
+      console.error("[useGameSession] Error setting game over:", err);
+    }
+  };
+
+  // ─── Derived State ─────────────────────────────────────────────────
+
   const currentPlayer = session?.players && currentUser ? session.players[currentUser.id] : null;
 
   return {
@@ -250,6 +347,26 @@ export const useGameSession = (roomId: string) => {
     leaveLobby,
     incrementGenerator,
     
+    // Briefing
+    setBriefingReady: async (role: string, ready: boolean) => {
+      if (!session) return;
+      const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
+      await update(ref(db, `sessions/${roomId}/briefingReady`), {
+        [capitalizedRole]: ready
+      });
+    },
+
+    // Countdown & Timer
+    startCountdownAlert,
+    startPlaying,
+    setGameOver,
+
+    // Task 1
+    submitAnalystId,
+    authorizeRepair,
+    completeRepair,
+
+    // Legacy helpers
     setMission1Ready: async (ready: boolean) => {
       if (!currentUser || !session) return;
       await update(ref(db, `sessions/${roomId}/mission1Ready`), {
@@ -273,6 +390,7 @@ export const useGameSession = (roomId: string) => {
         penaltyTime: (session.penaltyTime || 0) + seconds
       });
     },
+
     setAuthStatus: async (status: 'pending' | 'completed') => {
       if (!currentUser || !session) return;
       await update(ref(db, `sessions/${roomId}`), {
@@ -286,14 +404,6 @@ export const useGameSession = (roomId: string) => {
         isSystemOnline: true,
         mission1Status: "briefing",
         startTime: Date.now()
-      });
-    },
-
-    setBriefingReady: async (role: string, ready: boolean) => {
-      if (!session) return;
-      const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
-      await update(ref(db, `sessions/${roomId}/briefingReady`), {
-        [capitalizedRole]: ready
       });
     },
   };

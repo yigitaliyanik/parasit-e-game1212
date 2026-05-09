@@ -5,7 +5,9 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useGameSession } from "@/hooks/useGameSession";
 import LobbyPhase from "@/components/phases/LobbyPhase";
 import BriefingPhase from "@/components/phases/BriefingPhase";
+import CountdownAlert from "@/components/phases/CountdownAlert";
 import PlayingPhase from "@/components/phases/PlayingPhase";
+import GameOverScreen from "@/components/phases/GameOverScreen";
 import { Loader2 } from "lucide-react";
 
 export default function RoomPage() {
@@ -60,8 +62,12 @@ export default function RoomPage() {
       return <LobbyPhase roomId={roomId} />;
     case "briefing":
       return <BriefingPhase roomId={roomId} />;
+    case "countdown_alert":
+      return <CountdownAlert roomId={roomId} />;
     case "playing":
       return <PlayingPhase roomId={roomId} />;
+    case "game_over":
+      return <GameOverScreen roomId={roomId} />;
     default:
       return <div className="text-white p-8">Unknown game state.</div>;
   }

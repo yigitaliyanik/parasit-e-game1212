@@ -1,82 +1,119 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useGameSession } from "@/hooks/useGameSession";
-import { useTypewriter } from "@/hooks/useTypewriter";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Terminal } from "lucide-react";
+import { useGameSession } from "@/hooks/useGameSession";
+import { Role } from "@/lib/types";
 
 interface BriefingPhaseProps {
   roomId: string;
 }
 
-const PHASE1_TEXT = `[ECO_AI_SYSTEM_INITIALIZING...]
-[FIREWALL: BREACHED]
-[CITY_STATUS: CRITICAL]
-
-Can anyone hear me? Please, someone be on this channel... I am Eco, the city's infrastructure AI.
-> Following the meteor strike, an unknown digital entity—we call it 'Parazit[e]'—has infiltrated the city. Power grids are failing, water systems are being poisoned, and communications are about to collapse.
-> I have activated Protocol:[e] and connected you, the Emergency Response Team, to this isolated network. You are our only hope to save the city. But first, we must establish your connection...`;
-
-const ROLE_TEXTS: Record<string, string> = {
-  journalist: "Terminal Confirmed: Communication Network. Welcome, Journalist. The city is blind and deaf. People are in a panic; reports are flooding in via radios and walkie-talkies from the meteor crash sites and areas hit by Parazit[e]. Your mission is to listen to this chaos, find out what is happening where, and inform the team. You are our eyes and ears.",
-  analyst: "Terminal Confirmed: Data Center. Welcome, Data Analyst. Raw information alone is useless. In front of you are the city's classified infrastructure directories. You must match the street names or codes coming from the Journalist with these directories to pinpoint Parazit[e]'s actual target in the system (which valve, which transformer). You are our brain.",
-  executive: "Terminal Confirmed: Command Center. Welcome, Executive. Only you have the authority. When the Analyst gives you the targets, you must route power to the right locations, dispatch ambulances, and grant field clearance to the Engineer to fix the systems. One wrong approval will drag the city and Protocol:[e] into disaster. You are our leader.",
-  engineer: "Terminal Confirmed: Field Operations. Welcome, Engineer. When clearance is granted, it's time to get your hands dirty. You will reconnect the wires severed by Parazit[e], equalize the corrupted pressure valves, and physically save the system. You cannot touch the systems until the Executive gives you clearance. You are our hands."
-};
-
 export default function BriefingPhase({ roomId }: BriefingPhaseProps) {
-  const { session, currentPlayer, setBriefingReady, updateGameStatus } = useGameSession(roomId);
-  const [currentStep, setCurrentStep] = useState<"phase1" | "isolating" | "phase2" | "transition">("phase1");
+  const { session, currentPlayer, setBriefingReady, startCountdownAlert } = useGameSession(roomId);
+  const [currentStep, setCurrentStep] = useState<"phase1" | "isolating" | "phase2">("phase1");
+  const [phase1Display, setPhase1Display] = useState("");
+  const [phase2Display, setPhase2Display] = useState("");
+  const [phase1Complete, setPhase1Complete] = useState(false);
+  const [phase2Complete, setPhase2Complete] = useState(false);
   const [isRedGlitch, setIsRedGlitch] = useState(false);
+  const [hasTriggeredCountdown, setHasTriggeredCountdown] = useState(false);
 
-  const role = currentPlayer?.role || "engineer";
-  
-  // Phase 1 Typewriter
-  const { displayedText: phase1Display, isComplete: phase1Complete } = useTypewriter(PHASE1_TEXT, 15, currentStep === "phase1");
-  
-  // Phase 2 Typewriter
-  const { displayedText: phase2Display, isComplete: phase2Complete } = useTypewriter(ROLE_TEXTS[role], 20, currentStep === "phase2");
+  const role = currentPlayer?.role as Role;
+  const capitalizedRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : "";
+  const isLocalReady = session?.briefingReady?.[capitalizedRole] || false;
+
+  const phase1Text = `[ECO_AI_ASSISTANT_INIT]
+LOCATION: ECOVILLE_CENTRAL_CORE
+THREAT_LEVEL: OMEGA
+
+"Greetings, Agents. I am the Eco AI Assistant. 
+A catastrophic meteor strike has hit Ecoville, releasing 
+an electromagnetic entity known as the Parasit[e]. 
+The city is falling into chaos. I am isolating your 
+channels to prepare you for the neutralization protocol."`;
+
+  const phase2Texts: Record<Role, string> = {
+    journalist: `Hi Agent, you are the Journalist. 
+
+Your duty is to find the hidden stories and secrets that Parasit[e] is trying to bury. Use your curiosity to uncover the truth and share it with the team. Every piece of information is a weapon. The city's history is in your hands. 
+
+Good luck!`,
+    analyst: `Hi Agent, you are the Data Analyst. 
+
+Your duty is to crack the encrypted codes and solve the mysteries that Parasit[e] has created. Your analysis will guide the entire team through the darkness. Work closely with your teammates and use your mind to find the truth. The city's digital safety is in your hands. 
+
+Good luck!`,
+    engineer: `Hi Agent, you are the Engineer. 
+
+Your duty is to use your skills and intelligence to repair everything that Parasit[e] has broken across the city. You are the one who will physically save Ecoville. For areas you cannot access, stay in constant communication with the Executive; they can open the way for you. Your talent is our strength. 
+
+Good luck!`,
+    executive: `Hi Agent, you are the Executive. 
+
+Your duty is to lead and coordinate the team's efforts. You have the authority to open locked paths and manage the mission's progress. Work with the Engineer to ensure every sector is secure. The future of Ecoville depends on your strategy. 
+
+Good luck!`,
+  };
+
+  const typeText = useCallback(async (text: string, setter: (s: string) => void, onComplete: () => void) => {
+    let current = "";
+    for (let i = 0; i < text.length; i++) {
+      current += text[i];
+      setter(current);
+      await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 30));
+    }
+    onComplete();
+  }, []);
 
   useEffect(() => {
-    if (phase1Complete && currentStep === "phase1") {
-      const timer = setTimeout(() => {
-        setCurrentStep("isolating");
+    if (currentStep === "phase1") {
+      typeText(phase1Text, setPhase1Display, () => {
+        setPhase1Complete(true);
+        setTimeout(() => setCurrentStep("isolating"), 2000);
+      });
+    }
+  }, [currentStep, phase1Text, typeText]);
+
+  useEffect(() => {
+    if (currentStep === "isolating") {
+      setTimeout(() => {
+        setIsRedGlitch(true);
         setTimeout(() => {
+          setIsRedGlitch(false);
           setCurrentStep("phase2");
-        }, 2000);
-      }, 2000);
-      return () => clearTimeout(timer);
+        }, 800);
+      }, 1500);
     }
-  }, [phase1Complete, currentStep]);
+  }, [currentStep]);
 
   useEffect(() => {
-    if (session?.briefingReady) {
-      const readyCount = Object.values(session.briefingReady).filter(Boolean).length;
-      if (readyCount === 4 && !isRedGlitch) {
-        setTimeout(() => {
-          setIsRedGlitch(true);
-          setTimeout(() => {
-            if (currentPlayer?.isHost) {
-              updateGameStatus("playing");
-            }
-          }, 1500);
-        }, 0);
-      }
+    if (currentStep === "phase2" && role) {
+      typeText(phase2Texts[role], setPhase2Display, () => setPhase2Complete(true));
     }
-  }, [session?.briefingReady, currentPlayer?.isHost, updateGameStatus, isRedGlitch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, role, typeText]);
+
+  // Auto-trigger countdown when ALL 4 roles are ready
+  useEffect(() => {
+    if (!session || !currentPlayer?.isHost || hasTriggeredCountdown) return;
+    const br = session.briefingReady;
+    if (!br) return;
+    const allReady = br["Journalist"] && br["Analyst"] && br["Engineer"] && br["Executive"];
+    if (allReady) {
+      setHasTriggeredCountdown(true);
+      startCountdownAlert();
+    }
+  }, [session, currentPlayer?.isHost, hasTriggeredCountdown, startCountdownAlert]);
 
   if (!session || !currentPlayer) return null;
 
-  const isLocalReady = session.briefingReady?.[role.charAt(0).toUpperCase() + role.slice(1)] || false;
-
   return (
-    <div className="min-h-screen bg-black text-[#00ffff] font-mono p-8 flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Glitch Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="scanline" />
-        <div className="noise" />
-      </div>
+    <div className="min-h-screen bg-black text-[#00ffff] font-mono flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Visual FX */}
+      <div className="scanline" />
+      <div className="noise-bg" />
 
       {/* Red Glitch Transition */}
       <AnimatePresence>
@@ -86,18 +123,10 @@ export default function BriefingPhase({ roomId }: BriefingPhaseProps) {
             animate={{ opacity: 1 }}
             className="fixed inset-0 z-[100] bg-red-600/30 flex items-center justify-center overflow-hidden"
           >
-            <div className="absolute inset-0 bg-red-900 animate-pulse mix-blend-overlay" />
+            <div className="absolute inset-0 bg-red-900 animate-pulse-red mix-blend-overlay" />
             <div className="text-red-500 text-9xl font-black italic tracking-tighter scale-150 opacity-50 blur-sm">
               [SYSTEM_REBOOT]
             </div>
-            <style jsx>{`
-              .animate-pulse { animation: pulse 0.1s infinite; }
-              @keyframes pulse {
-                0% { opacity: 0.2; }
-                50% { opacity: 0.8; }
-                100% { opacity: 0.2; }
-              }
-            `}</style>
           </motion.div>
         )}
       </AnimatePresence>
@@ -163,26 +192,6 @@ export default function BriefingPhase({ roomId }: BriefingPhaseProps) {
           )}
         </div>
       </div>
-
-      <style jsx>{`
-        .scanline {
-          width: 100%;
-          height: 2px;
-          background: rgba(0, 255, 255, 0.1);
-          position: absolute;
-          animation: scan 4s linear infinite;
-        }
-        @keyframes scan {
-          0% { transform: translateY(-100vh); }
-          100% { transform: translateY(100vh); }
-        }
-        .noise {
-          background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-          position: absolute;
-          inset: 0;
-          opacity: 0.05;
-        }
-      `}</style>
     </div>
   );
 }

@@ -117,3 +117,66 @@
   0% { clip: rect(65px, 9999px, 100px, 0); transform: skew(0.15deg); }
   100% { clip: rect(2px, 9999px, 5px, 0); transform: skew(0.15deg); }
 }
+
+@keyframes scan {
+  0% { transform: translateY(-100vh); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes pulse-red {
+  0% { opacity: 0.2; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.2; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+@keyframes flash-red {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.5); }
+  50% { border-color: rgba(239, 68, 68, 0.05); }
+}
+
+.noise-bg {
+  background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+}
+
+.animate-pulse-red {
+  animation: pulse-red 0.1s infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-shake {
+  animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.animate-flash-red {
+  animation: flash-red 0.5s ease-in-out infinite;
+}
+
+/* Countdown Alert Text */
+.countdown-text {
+  color: #ef4444;
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4), 0 0 80px rgba(239, 68, 68, 0.2);
+  animation: flash-text 0.8s ease-in-out infinite;
+}
+
+@keyframes flash-text {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
