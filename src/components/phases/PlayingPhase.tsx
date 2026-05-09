@@ -106,7 +106,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
             </div>
 
             <div className="space-y-3">
-              {TRANSFORMER_DATA.map((t) => {
+              {TRANSFORMER_DATA.map((t, idx) => {
                 const isFound = foundIds.includes(t.id);
                 const isAuthorized = authorizedIds.includes(t.id);
                 const isRepaired = repairedIds.includes(t.id);
@@ -134,7 +134,9 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
                         : "bg-slate-700"
                     }`} />
                     <div className="flex-grow">
-                      <p className="font-mono text-[10px] text-slate-400">{t.district}</p>
+                      <p className="font-mono text-[10px] text-slate-400">
+                        {isFound ? t.district : `Sector ${String(idx + 1).padStart(2, "0")}`}
+                      </p>
                     </div>
                     <span className={`font-mono text-[9px] uppercase tracking-wider ${
                       isRepaired ? "text-green-400" : isAuthorized ? "text-fuchsia-400" : isFound ? "text-amber-400" : "text-slate-600"
