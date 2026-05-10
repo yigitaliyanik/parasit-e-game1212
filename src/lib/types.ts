@@ -46,45 +46,36 @@ export interface GameSession {
 // Puzzle data — hardcoded transformer locations
 export const TRANSFORMER_DATA = [
   {
-    id: "4821",
+    id: "4021",
     district: "Westbridge",
     clue: "CITIZEN_REPORT #1:\n\"There's a strange humming sound near the old bridge power station in Westbridge. The streetlights have been flickering for hours and my electronics keep shorting out. Something is very wrong down there.\"",
-    gridPosition: { row: 1, col: 2 },
+    gridPosition: { row: 1, col: 0 },
   },
   {
-    id: "7163",
+    id: "8812",
     district: "Northgate",
     clue: "CITIZEN_REPORT #2:\n\"The industrial park warehouses in Northgate are making terrible noises. Sparks are flying from the transformer boxes and the whole area smells like ozone. People are evacuating.\"",
-    gridPosition: { row: 0, col: 3 },
+    gridPosition: { row: 0, col: 0 },
   },
   {
-    id: "3057",
-    district: "Ironhaven",
-    clue: "CITIZEN_REPORT #3:\n\"There's a burning smell coming from underground near the docks in Ironhaven. The power keeps surging and dying. The whole port district has gone dark except for a pulsing red glow.\"",
-    gridPosition: { row: 2, col: 1 },
+    id: "9934",
+    district: "Southside",
+    clue: "CITIZEN_REPORT #3:\n\"There's a burning smell coming from underground near the borders in Southside. The power keeps surging and dying. The whole district has gone dark except for a pulsing red glow.\"",
+    gridPosition: { row: 1, col: 1 },
   },
 ] as const;
 
 // Grid map data for the Analyst
 export const CITY_GRID = [
-  ["Cloudpeak", "Starfield", "Silverton", "Northgate"],
-  ["Redmoor",   "Central",   "Westbridge", "Ashvale"],
-  ["Duskwall",  "Ironhaven", "Bayport",    "Stoneridge"],
+  ["Northgate", "Eastend"],
+  ["Westbridge", "Southside"],
 ] as const;
 
 export const GRID_TRANSFORMER_IDS: Record<string, string> = {
-  "Westbridge": "4821",
-  "Northgate": "7163",
-  "Ironhaven": "3057",
-  "Cloudpeak": "9912",
-  "Starfield": "5540",
-  "Silverton": "2289",
-  "Redmoor": "6673",
-  "Central": "1100",
-  "Ashvale": "8834",
-  "Duskwall": "4406",
-  "Bayport": "7752",
-  "Stoneridge": "3318",
+  "Northgate": "8812",
+  "Westbridge": "4021",
+  "Southside": "9934",
+  "Eastend": "1156",
 };
 
 // Wire puzzle colors for engineer

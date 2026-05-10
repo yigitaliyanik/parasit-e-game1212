@@ -23,6 +23,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
     setGameOver,
     submitAnalystId,
     authorizeRepair,
+    removeAuthorization,
     completeRepair,
     updateGameStatus,
   } = useGameSession(roomId);
@@ -205,6 +206,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
                   authorizedIds={authorizedIds}
                   repairedIds={repairedIds}
                   onCompleteRepair={completeRepair}
+                  onRemoveAuthorization={removeAuthorization}
                 />
               )}
             </>

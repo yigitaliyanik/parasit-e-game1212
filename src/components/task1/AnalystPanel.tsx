@@ -2,157 +2,146 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Map, Search, CheckCircle2, XCircle, AlertTriangle, Terminal } from "lucide-react";
-import { TRANSFORMER_DATA } from "@/lib/types";
+import { Map as MapIcon, X, Radar, Cpu } from "lucide-react";
+import { GRID_TRANSFORMER_IDS } from "@/lib/types";
 
+// Note: The Analyst no longer submits IDs. They just discover them and communicate them verbally.
 interface AnalystPanelProps {
-  foundIds: string[];
-  onSubmitId: (id: string) => Promise<boolean>;
+  foundIds?: string[]; // Kept for compatibility if passed
+  onSubmitId?: (id: string) => Promise<boolean>; // Kept for compatibility if passed
 }
 
-export default function AnalystPanel({ foundIds, onSubmitId }: AnalystPanelProps) {
-  const [inputValue, setInputValue] = useState("");
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const DISTRICTS = [
+  { name: "Northgate", id: "northgate", x: 10, y: 10, w: 40, h: 40, path: "M10,10 L50,10 L50,50 L10,50 Z", color: "rgba(16, 185, 129, 0.4)", stroke: "#10b981", code: GRID_TRANSFORMER_IDS["Northgate"] },
+  { name: "Eastend", id: "eastend", x: 50, y: 10, w: 40, h: 40, path: "M50,10 L90,10 L90,50 L50,50 Z", color: "rgba(16, 185, 129, 0.4)", stroke: "#10b981", code: GRID_TRANSFORMER_IDS["Eastend"] },
+  { name: "Westbridge", id: "westbridge", x: 10, y: 50, w: 40, h: 40, path: "M10,50 L50,50 L50,90 L10,90 Z", color: "rgba(16, 185, 129, 0.4)", stroke: "#10b981", code: GRID_TRANSFORMER_IDS["Westbridge"] },
+  { name: "Southside", id: "southside", x: 50, y: 50, w: 40, h: 40, path: "M50,50 L90,50 L90,90 L50,90 Z", color: "rgba(16, 185, 129, 0.4)", stroke: "#10b981", code: GRID_TRANSFORMER_IDS["Southside"] },
+];
 
-  const handleSubmit = async () => {
-    if (!inputValue.trim() || isSubmitting) return;
-    if (inputValue.trim().length !== 4) return;
-    setIsSubmitting(true);
-
-    const id = inputValue.trim().toUpperCase();
-    const success = await onSubmitId(id);
-    if (success) {
-      setFeedback({ type: "success", message: `TRANSFORMER [${id}] IDENTIFIED — DATA TRANSMITTED TO EXECUTIVE` });
-    } else {
-      // Check if already found
-      if (foundIds.includes(id)) {
-        setFeedback({ type: "error", message: `ID [${id}] ALREADY ISOLATED — DUPLICATE ENTRY` });
-      } else {
-        setFeedback({ type: "error", message: `ID [${id}] INVALID — 30 SECOND PENALTY APPLIED` });
-      }
-    }
-
-    setInputValue("");
-    setIsSubmitting(false);
-    setTimeout(() => setFeedback(null), 4000);
-  };
+export default function AnalystPanel({}: AnalystPanelProps) {
+  const [selectedDistrict, setSelectedDistrict] = useState<typeof DISTRICTS[0] | null>(null);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full flex flex-col relative">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-green-500/10 rounded border border-green-500/30">
-          <Map className="w-6 h-6 text-green-400" />
+      <div className="flex items-center gap-3 mb-2 flex-shrink-0">
+        <div className="p-3 bg-green-500/10 rounded border border-green-500/30 relative overflow-hidden">
+          <MapIcon className="w-6 h-6 text-green-400 relative z-10" />
+          <div className="absolute inset-0 bg-green-400/20 animate-ping" />
         </div>
         <div>
           <h3 className="text-xs font-mono text-slate-500 uppercase tracking-widest">Grid Analysis Terminal</h3>
-          <p className="text-lg font-black text-green-400 uppercase tracking-wider">Signal Isolation</p>
+          <p className="text-lg font-black text-green-400 uppercase tracking-wider">Bird's Eye View</p>
         </div>
       </div>
 
-      <p className="text-slate-400 text-sm font-mono border-l-2 border-green-500/30 pl-4 mb-4">
-        The Journalist will relay <span className="text-green-400 font-bold">district names</span> from citizen reports.
-        Cross-reference the reports and enter the correct 4-digit <span className="text-green-400 font-bold">Transformer ID</span> to
-        isolate the parasitic signal.
+      <p className="text-slate-400 text-sm font-mono border-l-2 border-green-500/30 pl-4 flex-shrink-0">
+        Listen to the Journalist's reports to identify the compromised districts. Click on a district in the map below to discover its <span className="text-green-400 font-bold">Transformer ID</span> and communicate it to the Executive.
       </p>
 
-      {/* Terminal Input Section */}
-      <div className="bg-black/80 border border-green-500/20 rounded-lg p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Terminal className="w-4 h-4 text-green-500" />
-          <span className="font-mono text-xs text-green-500/70 uppercase tracking-widest">Signal Isolation Console</span>
+      {/* Interactive Map Section */}
+      <div className="flex-grow bg-[#000500] border-2 border-green-500/20 rounded-xl relative overflow-hidden flex items-center justify-center p-4">
+        {/* Radar sweep effect */}
+        <div className="absolute inset-0 pointer-events-none opacity-20">
+          <div className="w-full h-full rounded-full border border-green-500/30 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-150" />
+          <div className="w-full h-full rounded-full border border-green-500/50 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-100" />
+          <div className="w-full h-full rounded-full border border-green-500/80 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-50" />
+          <div className="w-[200%] h-[200%] bg-gradient-to-t from-green-500/10 to-transparent absolute top-1/2 left-1/2 origin-bottom-left animate-spin" style={{ animationDuration: '4s', transform: 'translateX(-50%) translateY(-50%)' }} />
         </div>
 
-        {/* Terminal-style log */}
-        <div className="bg-[#001100]/60 border border-green-900/40 rounded p-4 mb-4 font-mono text-xs space-y-1">
-          <p className="text-green-600/60">{`>`} SYS: Parasitic signals detected across city grid</p>
-          <p className="text-green-600/60">{`>`} SYS: Awaiting transformer ID input from analyst...</p>
-          <p className="text-green-600/60">{`>`} SYS: Cross-reference journalist reports to identify codes</p>
-          {foundIds.map((id) => (
-            <p key={id} className="text-green-400">{`>`} MATCH: Transformer [{id}] — signal isolated ✓</p>
+        <svg viewBox="0 0 100 100" className="w-full max-w-md h-auto drop-shadow-[0_0_15px_rgba(16,185,129,0.3)] z-10">
+          <defs>
+            <pattern id="gridPattern" width="4" height="4" patternUnits="userSpaceOnUse">
+              <rect width="4" height="4" fill="none" stroke="rgba(16, 185, 129, 0.1)" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          
+          <rect width="100" height="100" fill="url(#gridPattern)" />
+          
+          {/* Main frame */}
+          <rect x="5" y="5" width="90" height="90" fill="none" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="1" />
+          <rect x="8" y="8" width="84" height="84" fill="none" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="0.5" />
+          
+          {DISTRICTS.map((d) => (
+            <g key={d.id} className="cursor-pointer group" onClick={() => setSelectedDistrict(d)}>
+              <path
+                d={d.path}
+                className="transition-all duration-300"
+                fill="rgba(16, 185, 129, 0.05)"
+                stroke={d.stroke}
+                strokeWidth="0.5"
+              />
+              <rect 
+                x={d.x} y={d.y} width={d.w} height={d.h} 
+                className="opacity-0 group-hover:opacity-10 transition-opacity duration-300"
+                fill="#10b981" 
+              />
+              {/* Central node */}
+              <circle cx={d.x + d.w/2} cy={d.y + d.h/2} r="2" fill={d.stroke} className="group-hover:animate-ping" />
+              <circle cx={d.x + d.w/2} cy={d.y + d.h/2} r="1" fill="#fff" />
+              {/* Text label */}
+              <text x={d.x + d.w/2} y={d.y + d.h/2 + 8} fontSize="3.5" fill="#10b981" textAnchor="middle" className="font-mono font-bold tracking-widest uppercase opacity-70 group-hover:opacity-100">
+                {d.name}
+              </text>
+            </g>
           ))}
-          <p className="text-green-500 animate-pulse">{`>`} _</p>
-        </div>
 
-        {/* Input */}
-        <div className="flex gap-3">
-          <div className="flex-grow relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 font-mono text-sm">{`>`}</span>
-            <input
-              type="text"
-              maxLength={4}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value.replace(/\D/g, ""))}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              placeholder="_ _ _ _"
-              className="w-full bg-black border border-green-500/30 rounded px-4 py-3 pl-8 font-mono text-lg text-green-300 placeholder-green-900/60 focus:outline-none focus:border-green-400 focus:shadow-[0_0_15px_rgba(74,222,128,0.15)] tracking-[0.3em] uppercase"
-            />
-          </div>
-          <button
-            onClick={handleSubmit}
-            disabled={inputValue.length !== 4 || isSubmitting}
-            className="px-6 py-3 bg-green-500/20 border border-green-500/40 text-green-400 font-mono text-sm uppercase tracking-wider rounded hover:bg-green-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-          >
-            Isolate
-          </button>
-        </div>
-      </div>
+          {/* Crosshairs */}
+          <line x1="50" y1="0" x2="50" y2="100" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="0.5" strokeDasharray="2,2" />
+          <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="0.5" strokeDasharray="2,2" />
+        </svg>
 
-      {/* Feedback */}
-      <AnimatePresence>
-        {feedback && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className={`flex items-center gap-3 p-4 rounded border font-mono text-sm ${
-              feedback.type === "success"
-                ? "bg-green-500/10 border-green-500/30 text-green-400"
-                : "bg-red-500/10 border-red-500/30 text-red-400"
-            }`}
-          >
-            {feedback.type === "success" ? (
-              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-            ) : (
-              <XCircle className="w-5 h-5 flex-shrink-0" />
-            )}
-            {feedback.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Identified Transformers */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-slate-500 font-mono text-xs mb-2">
-          <AlertTriangle className="w-3 h-3" />
-          <span>Signals Isolated: {foundIds.length} / 3</span>
-        </div>
-        {foundIds.map((id) => {
-          const tData = TRANSFORMER_DATA.find(t => t.id === id);
-          return (
-            <div
-              key={id}
-              className="bg-green-500/5 border border-green-500/20 rounded px-4 py-2 flex items-center justify-between"
+        {/* Selected District Popup */}
+        <AnimatePresence>
+          {selectedDistrict && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              className="absolute inset-0 flex items-center justify-center z-50 p-6 bg-black/60 backdrop-blur-sm"
+              onClick={() => setSelectedDistrict(null)}
             >
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-green-400" />
-                <span className="font-mono text-sm text-green-300">Transformer [{id}]</span>
-              </div>
-              <span className="font-mono text-xs text-green-500/60 uppercase tracking-widest">
-                {tData?.district || "Unknown"} — Isolated
-              </span>
-            </div>
-          );
-        })}
-      </div>
+              <div 
+                className="bg-[#0a1a0a] border-2 border-green-500 rounded-xl p-8 max-w-sm w-full shadow-[0_0_50px_rgba(16,185,129,0.3)] relative overflow-hidden"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Glitch lines */}
+                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[repeating-linear-gradient(transparent,transparent_2px,#10b981_2px,#10b981_4px)]" />
+                
+                <button 
+                  onClick={() => setSelectedDistrict(null)}
+                  className="absolute top-4 right-4 text-green-500 hover:text-green-300 transition-colors z-20"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+                
+                <div className="flex items-center gap-3 mb-6 relative z-10">
+                  <Radar className="w-8 h-8 text-green-400 animate-spin-slow" />
+                  <div>
+                    <p className="text-green-500/70 font-mono text-xs tracking-widest uppercase">Target Locked</p>
+                    <h4 className="text-2xl font-black text-white uppercase">{selectedDistrict.name}</h4>
+                  </div>
+                </div>
 
-      {/* Warning */}
-      <div className="p-3 bg-red-500/5 border border-red-500/20 rounded flex items-start gap-3">
-        <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-        <p className="font-mono text-[11px] text-red-400/70 leading-relaxed">
-          WARNING: Each incorrect submission triggers Parasit[e] countermeasures — 30 second time penalty per failed attempt.
-        </p>
+                <div className="space-y-4 relative z-10">
+                  <div className="bg-black/80 border border-green-500/30 rounded p-4 text-center">
+                    <p className="text-slate-500 font-mono text-xs uppercase tracking-widest mb-1">Transformer ID</p>
+                    <p className="text-5xl font-black text-green-400 tracking-[0.2em] font-mono drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                      {selectedDistrict.code}
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded">
+                    <Cpu className="w-4 h-4 text-green-400" />
+                    <p className="text-green-300 font-mono text-[10px] uppercase tracking-widest">
+                      Relay this code to the Executive immediately.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

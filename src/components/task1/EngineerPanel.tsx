@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
-import { Zap, CheckCircle2, Lock } from "lucide-react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Zap, CheckCircle2, Lock, ShieldAlert } from "lucide-react";
 import { TRANSFORMER_DATA } from "@/lib/types";
 
 interface EngineerPanelProps {
   authorizedIds: string[];
   repairedIds: string[];
   onCompleteRepair: (id: string) => void;
+  onRemoveAuthorization: (id: string) => void;
 }
 
 const WIRE_DEFS = [
@@ -20,31 +21,53 @@ const WIRE_DEFS = [
 
 interface WirePuzzle {
   transformerId: string;
+  isValid: boolean;
   shuffledRight: number[];
   connections: Record<number, number>;
 }
 
-export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRepair }: EngineerPanelProps) {
+export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRepair, onRemoveAuthorization }: EngineerPanelProps) {
   const [puzzle, setPuzzle] = useState<WirePuzzle | null>(null);
   const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
   const [wrongFlash, setWrongFlash] = useState(false);
   const [successFlash, setSuccessFlash] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const startPuzzle = useCallback((tid: string) => {
-    const order = [0, 1, 2, 3];
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
+  const startPuzzle = useCallback((id: string) => {
+    const isValid = TRANSFORMER_DATA.some(t => t.id === id);
+    
+    if (isValid) {
+      const order = [0, 1, 2, 3];
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+      setPuzzle({ transformerId: id, isValid: true, shuffledRight: order, connections: {} });
+    } else {
+      // Invalid ID - show already connected wires
+      const order = [0, 1, 2, 3];
+      const connections: Record<number, number> = { 0: 0, 1: 1, 2: 2, 3: 3 };
+      setPuzzle({ transformerId: id, isValid: false, shuffledRight: order, connections });
     }
-    setPuzzle({ transformerId: tid, shuffledRight: order, connections: {} });
+    
     setSelectedLeft(null);
     setWrongFlash(false);
     setSuccessFlash(false);
   }, []);
 
+  // Handle invalid puzzle timeout
+  useEffect(() => {
+    if (puzzle && !puzzle.isValid) {
+      const timer = setTimeout(() => {
+        onRemoveAuthorization(puzzle.transformerId);
+        setPuzzle(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [puzzle, onRemoveAuthorization]);
+
   const handleLeftClick = (idx: number) => {
-    if (!puzzle) return;
+    if (!puzzle || !puzzle.isValid) return;
     if (puzzle.connections[idx] !== undefined) {
       const c = { ...puzzle.connections };
       delete c[idx];
@@ -55,7 +78,7 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
   };
 
   const handleRightClick = (shuffledIdx: number) => {
-    if (!puzzle || selectedLeft === null) return;
+    if (!puzzle || !puzzle.isValid || selectedLeft === null) return;
     const taken = Object.values(puzzle.connections).includes(shuffledIdx);
     if (taken) return;
 
@@ -93,18 +116,29 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
           <div>
             <h3 className="text-cyan-400 font-mono text-xs uppercase tracking-widest">Wire Repair Module</h3>
             <p className="text-lg font-black text-white">
-              Transformer [{puzzle.transformerId}] — {tData?.district}
+              Transformer [{puzzle.transformerId}] {tData ? `— ${tData.district}` : ""}
             </p>
           </div>
-          <button onClick={() => setPuzzle(null)} className="text-slate-500 font-mono text-xs hover:text-slate-300 transition-colors">[Cancel]</button>
+          {puzzle.isValid && (
+            <button onClick={() => setPuzzle(null)} className="text-slate-500 font-mono text-xs hover:text-slate-300 transition-colors">[Cancel]</button>
+          )}
         </div>
 
-        <p className="text-slate-400 text-sm font-mono border-l-2 border-cyan-500/30 pl-4">
-          Match each <span className="text-cyan-400">color name</span> on the left to its matching <span className="text-cyan-400">colored node</span> on the right.
-        </p>
+        {puzzle.isValid ? (
+          <p className="text-slate-400 text-sm font-mono border-l-2 border-cyan-500/30 pl-4">
+            Match each <span className="text-cyan-400">color name</span> on the left to its matching <span className="text-cyan-400">colored node</span> on the right.
+          </p>
+        ) : (
+          <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+            <p className="text-green-400 text-sm font-mono tracking-widest uppercase font-bold">
+              SYSTEM STATUS: OPERATIONAL - NO FAULT DETECTED
+            </p>
+          </div>
+        )}
 
         <div ref={containerRef} className={`bg-black/80 border-2 rounded-xl p-8 transition-all relative overflow-hidden ${
-          successFlash ? "border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.4)]" : wrongFlash ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)]" : "border-cyan-500/20"
+          successFlash || !puzzle.isValid ? "border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.4)]" : wrongFlash ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)]" : "border-cyan-500/20"
         }`}>
           {/* Connection Lines SVG */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
@@ -138,12 +172,13 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
                   <button
                     key={`L-${i}`}
                     onClick={() => handleLeftClick(i)}
+                    disabled={!puzzle.isValid}
                     className={`relative flex items-center gap-3 px-4 py-3 rounded-lg border-2 font-mono font-black text-sm uppercase tracking-[0.2em] transition-all ${
-                      isConnected ? "opacity-40" : isActive ? "scale-105" : "hover:scale-[1.02]"
+                      isConnected ? "opacity-40" : isActive ? "scale-105" : puzzle.isValid ? "hover:scale-[1.02]" : ""
                     }`}
                     style={{
-                      borderColor: isActive ? wire.hex : `${wire.hex}50`,
-                      backgroundColor: isActive ? `${wire.hex}20` : "rgba(0,0,0,0.5)",
+                      borderColor: isActive || (!puzzle.isValid) ? wire.hex : `${wire.hex}50`,
+                      backgroundColor: isActive || (!puzzle.isValid) ? `${wire.hex}20` : "rgba(0,0,0,0.5)",
                       color: wire.hex,
                       boxShadow: isActive ? `0 0 20px ${wire.glow}, inset 0 0 10px ${wire.glow}` : "none",
                     }}
@@ -169,7 +204,7 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
               {puzzle.shuffledRight.map((actualIdx, shuffledIdx) => {
                 const wire = WIRE_DEFS[actualIdx];
                 const isTarget = Object.values(puzzle.connections).includes(shuffledIdx);
-                const canClick = selectedLeft !== null && !isTarget;
+                const canClick = selectedLeft !== null && !isTarget && puzzle.isValid;
                 return (
                   <button
                     key={`R-${shuffledIdx}`}
@@ -179,7 +214,7 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
                       isTarget ? "opacity-40" : canClick ? "hover:scale-[1.02] cursor-pointer" : "cursor-default opacity-60"
                     }`}
                     style={{
-                      borderColor: isTarget ? `${wire.hex}60` : `${wire.hex}30`,
+                      borderColor: isTarget || !puzzle.isValid ? `${wire.hex}60` : `${wire.hex}30`,
                       backgroundColor: "rgba(0,0,0,0.5)",
                     }}
                   >
@@ -192,8 +227,8 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
                     <div
                       className="w-8 h-8 rounded-full"
                       style={{
-                        backgroundColor: wire.hex,
-                        boxShadow: `0 0 12px ${wire.glow}, 0 0 24px ${wire.glow}`,
+                         backgroundColor: wire.hex,
+                         boxShadow: `0 0 12px ${wire.glow}, 0 0 24px ${wire.glow}`,
                       }}
                     />
                     {isTarget && <CheckCircle2 className="w-4 h-4 text-slate-400" />}
@@ -214,6 +249,12 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="text-green-400 font-mono text-sm text-center uppercase tracking-widest">
             Circuit aligned — transformer stabilized!
+          </motion.p>
+        )}
+        {!puzzle.isValid && (
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="text-slate-400 font-mono text-xs text-center uppercase tracking-widest">
+            Clearing false authorization in 3 seconds...
           </motion.p>
         )}
       </div>
@@ -239,34 +280,47 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
       </p>
 
       <div className="space-y-4">
-        {TRANSFORMER_DATA.map((t) => {
-          const isAuth = authorizedIds.includes(t.id);
-          const isDone = repairedIds.includes(t.id);
-          return (
-            <div key={t.id} className={`bg-black/60 border rounded-lg p-5 flex items-center justify-between transition-all ${
-              isDone ? "border-green-500/40" : isAuth ? "border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.1)]" : "border-slate-800 opacity-40"
-            }`}>
-              <div className="flex items-center gap-4">
-                <div className={`p-2 rounded ${isDone ? "bg-green-500/20" : isAuth ? "bg-cyan-500/20" : "bg-slate-800"}`}>
-                  {isDone ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : isAuth ? <Zap className="w-5 h-5 text-cyan-400 animate-pulse" /> : <Lock className="w-5 h-5 text-slate-600" />}
-                </div>
-                <div>
-                  <p className="font-mono text-xs text-slate-500 uppercase tracking-widest">Transformer [{t.id}]</p>
-                  <p className={`font-bold text-sm ${isDone ? "text-green-400" : isAuth ? "text-cyan-400" : "text-slate-600"}`}>{t.district} District</p>
-                </div>
-              </div>
-              {isDone ? (
-                <span className="text-green-400 font-mono text-xs tracking-widest uppercase">Stabilized</span>
-              ) : isAuth ? (
-                <button onClick={() => startPuzzle(t.id)} className="px-5 py-2.5 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-mono text-xs uppercase tracking-wider rounded hover:bg-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.2)] transition-all animate-pulse">
-                  Begin Repair
-                </button>
-              ) : (
-                <span className="text-slate-600 font-mono text-xs tracking-widest uppercase flex items-center gap-2"><Lock className="w-3 h-3" /> Locked</span>
-              )}
-            </div>
-          );
-        })}
+        <h4 className="font-mono text-xs text-slate-500 uppercase tracking-widest mb-2 border-b border-slate-800 pb-2">
+          Authorized Repairs
+        </h4>
+        <AnimatePresence>
+          {authorizedIds.length === 0 ? (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-slate-600 font-mono text-sm text-center py-4">
+               No pending repairs.
+             </motion.p>
+          ) : (
+            authorizedIds.map((id) => {
+              const isDone = repairedIds.includes(id);
+              const validTransformer = TRANSFORMER_DATA.find(t => t.id === id);
+
+              return (
+                <motion.div key={id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.9 }}
+                  className={`bg-black/60 border rounded-lg p-5 flex items-center justify-between transition-all ${
+                  isDone ? "border-green-500/40" : "border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.1)]"
+                }`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded ${isDone ? "bg-green-500/20" : "bg-cyan-500/20"}`}>
+                      {isDone ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Zap className="w-5 h-5 text-cyan-400 animate-pulse" />}
+                    </div>
+                    <div>
+                      <p className="font-mono text-xs text-slate-500 uppercase tracking-widest">Transformer [{id}]</p>
+                      <p className={`font-bold text-sm ${isDone ? "text-green-400" : "text-cyan-400"}`}>
+                        {validTransformer ? `${validTransformer.district} District` : "Unknown Origin"}
+                      </p>
+                    </div>
+                  </div>
+                  {isDone ? (
+                    <span className="text-green-400 font-mono text-xs tracking-widest uppercase">Stabilized</span>
+                  ) : (
+                    <button onClick={() => startPuzzle(id)} className="px-5 py-2.5 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-mono text-xs uppercase tracking-wider rounded hover:bg-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.2)] transition-all animate-pulse">
+                      Begin Repair
+                    </button>
+                  )}
+                </motion.div>
+              );
+            })
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="mt-4 p-3 bg-black/40 border border-slate-800 rounded text-center">

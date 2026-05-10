@@ -306,6 +306,18 @@ export const useGameSession = (roomId: string) => {
     }
   };
 
+  const removeAuthorization = async (transformerId: string) => {
+    if (!session) return;
+    try {
+      const alreadyAuthorized = session.task1?.executiveAuthorized || [];
+      await update(ref(db, `sessions/${roomId}/task1`), {
+        executiveAuthorized: alreadyAuthorized.filter(id => id !== transformerId),
+      });
+    } catch (err) {
+      console.error("[useGameSession] Error removing authorization:", err);
+    }
+  };
+
   const completeRepair = async (transformerId: string) => {
     if (!session) return;
     try {
@@ -364,6 +376,7 @@ export const useGameSession = (roomId: string) => {
     // Task 1
     submitAnalystId,
     authorizeRepair,
+    removeAuthorization,
     completeRepair,
 
     // Legacy helpers
