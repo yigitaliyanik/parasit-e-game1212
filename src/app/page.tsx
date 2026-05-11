@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, User } from "lucide-react";
 
-type IntroPhase = "boot" | "glitch" | "main";
+type IntroPhase = "matrix" | "main";
 
 export default function Home() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [introPhase, setIntroPhase] = useState<IntroPhase>("boot");
-  const [bootStep, setBootStep] = useState(0);
+  const [introPhase, setIntroPhase] = useState<IntroPhase>("matrix");
   
   const [alias, setAlias] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -40,22 +39,14 @@ export default function Home() {
     
     // Intro sequence logic (continued)
     const hasSeenIntro = sessionStorage.getItem("parasite_intro_seen");
-    let t1: NodeJS.Timeout, t2: NodeJS.Timeout, t3: NodeJS.Timeout, t4: NodeJS.Timeout, t5: NodeJS.Timeout;
+    let introTimer: NodeJS.Timeout;
 
     if (!hasSeenIntro) {
-      // Phase 1: Terminal Boot (0-2s)
-      t1 = setTimeout(() => setBootStep(1), 400); // BOOTING SYSTEM...
-      t2 = setTimeout(() => setBootStep(2), 900); // LOADING PROTOCOLS...
-      t3 = setTimeout(() => setBootStep(3), 1400); // ERROR
-      
-      // Phase 2: Glitch Reveal (2s-3.5s)
-      t4 = setTimeout(() => setIntroPhase("glitch"), 2000);
-
-      // Phase 3: Main UI (3.5s+)
-      t5 = setTimeout(() => {
+      // Matrix Phase (0-4s)
+      introTimer = setTimeout(() => {
         setIntroPhase("main");
         sessionStorage.setItem("parasite_intro_seen", "true");
-      }, 3500);
+      }, 4000);
     }
 
     // Allow escape to skip
@@ -66,7 +57,7 @@ export default function Home() {
 
     return () => {
       clearTimeout(mountTimeout);
-      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5);
+      clearTimeout(introTimer);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
@@ -104,45 +95,20 @@ export default function Home() {
     setTimeout(() => router.push(`/room/${joinCode.toUpperCase()}`), 500);
   };
 
-  // Render Phase 1: Terminal Boot
-  if (introPhase === "boot") {
+  // Render Matrix Intro Phase
+  if (introPhase === "matrix") {
     return (
-      <div className="min-h-screen bg-black text-emerald-500 font-mono p-6 relative overflow-hidden flex flex-col">
-        <div className="space-y-2 text-sm md:text-lg">
-          {bootStep >= 1 && <p>{">"} BOOTING SYSTEM...</p>}
-          {bootStep >= 2 && <p>{">"} LOADING PROTOCOLS...</p>}
-          {bootStep >= 3 && <p className="text-red-500">{">"} [ERROR] UNKNOWN ENTITY DETECTED.</p>}
-          <p>{">"} <span className="w-2 h-4 bg-emerald-500 inline-block animate-pulse" /></p>
+      <div className="relative min-h-screen bg-black overflow-hidden select-none">
+        <MatrixRain />
+        {/* Masking Layer: White text becomes transparent, black covers the rest */}
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black mix-blend-multiply pointer-events-none">
+          <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter text-white">
+            Parasit[e]
+          </h1>
         </div>
-        <button onClick={skipIntro} className="absolute bottom-6 right-6 text-slate-600 text-xs tracking-widest hover:text-slate-400">
+        <button onClick={skipIntro} className="absolute bottom-6 right-6 z-20 text-slate-600 text-xs tracking-widest hover:text-slate-400">
           SKIP [ESC]
         </button>
-      </div>
-    );
-  }
-
-  // Render Phase 2: Glitch Reveal
-  if (introPhase === "glitch") {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <style dangerouslySetInnerHTML={{__html: `
-          @keyframes hard-glitch {
-            0% { transform: translate(0) }
-            20% { transform: translate(-5px, 5px) }
-            40% { transform: translate(-5px, -5px) }
-            60% { transform: translate(5px, 5px) }
-            80% { transform: translate(5px, -5px) }
-            100% { transform: translate(0) }
-          }
-          .glitch-text {
-            animation: hard-glitch 0.2s infinite;
-            text-shadow: 4px 0 #a855f7, -4px 0 #10b981;
-          }
-        `}} />
-        <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter text-white glitch-text">
-          Parasit[e]
-        </h1>
-        <div className="absolute inset-0 bg-white/5 mix-blend-overlay animate-pulse" />
       </div>
     );
   }
@@ -225,16 +191,71 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Verification Card */}
-        <div className="max-w-xs mx-auto pt-8">
-          <div className="bg-slate-900/30 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
-            <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">System Role</span>
-            <div className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-lg">
-              <span className="text-emerald-400 font-black text-xs uppercase tracking-widest">JOURNALIST</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
+
+const MatrixRain = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+{}[]|:;"<>,.?/~\\'.split('');
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops: number[] = [];
+    for (let x = 0; x < columns; x++) {
+      drops[x] = 1;
+    }
+
+    let animationFrameId: number;
+    let lastDrawTime = 0;
+    const drawInterval = 33; // ~30fps
+
+    const draw = (time: number) => {
+      animationFrameId = requestAnimationFrame(draw);
+
+      if (time - lastDrawTime < drawInterval) return;
+      lastDrawTime = time;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = '#10b981'; // emerald-500
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(draw);
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-80" />;
+};

@@ -27,10 +27,35 @@ export default function EngineerPanel({
   const [error, setError] = useState(false);
   const TARGET_CODE = "2042"; // Filtration Bypass code from Analyst handbook
 
-  // Pipe puzzle state (simple 3x3 grid)
-  // Goal: click valid blue/green nodes to form a path, avoid red.
-  // We'll simplify: just have them select the correct nodes in sequence.
-  const [activeNodes, setActiveNodes] = useState<number[]>([]);
+  // Pipe puzzle state (5x5 grid)
+  type PipeType = 'straight' | 'angle' | 't' | 'cross' | 'empty';
+  interface Cell {
+    type: PipeType;
+    rot: number;
+    locked: boolean;
+  }
+
+  const [grid, setGrid] = useState<Cell[]>([]);
+  const [filledNodes, setFilledNodes] = useState<Set<number>>(new Set());
+
+  // Initialize grid on mount
+  useEffect(() => {
+    const INITIAL_TYPES: PipeType[] = [
+      'straight', 'angle', 'straight', 't', 'angle',
+      'angle', 'angle', 'angle', 'straight', 't',
+      'straight', 'cross', 'straight', 'angle', 'angle',
+      't', 'angle', 'angle', 'angle', 'straight',
+      'angle', 'straight', 't', 'angle', 'straight'
+    ];
+    
+    const initial = INITIAL_TYPES.map((type, i) => {
+      if (i === 0) return { type, rot: 90, locked: true };
+      if (i === 24) return { type, rot: 90, locked: true };
+      const randomRot = [0, 90, 180, 270][Math.floor(Math.random() * 4)];
+      return { type, rot: randomRot, locked: false };
+    });
+    setGrid(initial);
+  }, []);
 
   const handleKeypad = (digit: string) => {
     if (codeEntered) return;
@@ -54,30 +79,69 @@ export default function EngineerPanel({
     }
   };
 
-  const handleNodeClick = (index: number) => {
-    if (puzzleSolved) return;
-    if (activeNodes.includes(index)) {
-      setActiveNodes(prev => prev.filter(n => n !== index));
-    } else {
-      setActiveNodes(prev => [...prev, index]);
-    }
+  const handleNodeRotate = (index: number) => {
+    if (puzzleSolved || grid[index].locked) return;
+    setGrid(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], rot: (next[index].rot + 90) % 360 };
+      return next;
+    });
   };
 
-  // Check puzzle win condition: 
-  // Nodes 0, 4, 8 selected (diagonal path), 
-  // Red node (e.g. 2, 6) not selected.
+  // Calculate flow and check win condition
   useEffect(() => {
-    if (codeEntered && pipeAccessGranted && !puzzleSolved) {
-      const required = [0, 4, 8];
-      const invalid = [2, 6];
-      const hasRequired = required.every(n => activeNodes.includes(n));
-      const hasInvalid = invalid.some(n => activeNodes.includes(n));
+    if (!codeEntered || !pipeAccessGranted || puzzleSolved || grid.length === 0) return;
 
-      if (hasRequired && !hasInvalid) {
-        onPuzzleComplete();
+    const DIRS = ['N', 'E', 'S', 'W'];
+    const OPPOSITE: Record<string, string> = { 'N': 'S', 'E': 'W', 'S': 'N', 'W': 'E' };
+    const DELTAS: Record<string, [number, number]> = { 'N': [0, -1], 'E': [1, 0], 'S': [0, 1], 'W': [-1, 0] };
+
+    const getDirs = (type: string, rot: number) => {
+      let base: string[] = [];
+      if (type === 'straight') base = ['N', 'S'];
+      if (type === 'angle') base = ['N', 'E'];
+      if (type === 't') base = ['N', 'E', 'S'];
+      if (type === 'cross') base = ['N', 'E', 'S', 'W'];
+      
+      const shifts = rot / 90;
+      return base.map(d => DIRS[(DIRS.indexOf(d) + shifts) % 4]);
+    };
+
+    const filled = new Set<number>();
+    const queue = [{ x: 0, y: 0, fromDir: 'W' }]; // Water enters from West into (0,0)
+    let solved = false;
+    
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      if (curr.x < 0 || curr.x > 4 || curr.y < 0 || curr.y > 4) continue;
+      
+      const idx = curr.y * 5 + curr.x;
+      if (filled.has(idx)) continue;
+      
+      const cell = grid[idx];
+      const dirs = getDirs(cell.type, cell.rot);
+      
+      if (dirs.includes(curr.fromDir)) {
+        filled.add(idx);
+        for (const d of dirs) {
+          if (d !== curr.fromDir) {
+            const nx = curr.x + DELTAS[d][0];
+            const ny = curr.y + DELTAS[d][1];
+            if (nx === 5 && ny === 4 && d === 'E') {
+              solved = true;
+            }
+            queue.push({ x: nx, y: ny, fromDir: OPPOSITE[d] });
+          }
+        }
       }
     }
-  }, [activeNodes, codeEntered, pipeAccessGranted, puzzleSolved, onPuzzleComplete]);
+
+    setFilledNodes(filled);
+
+    if (solved) {
+      onPuzzleComplete();
+    }
+  }, [grid, codeEntered, pipeAccessGranted, puzzleSolved, onPuzzleComplete]);
 
 
   if (!codeEntered) {
@@ -184,7 +248,7 @@ export default function EngineerPanel({
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-lg"
+              className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-lg"
             >
               <div className="text-center">
                 <Activity className="w-16 h-16 text-green-400 mx-auto mb-4" />
@@ -195,35 +259,61 @@ export default function EngineerPanel({
             </motion.div>
           )}
 
-          <div className="grid grid-cols-3 gap-2 bg-black/50 p-4 border border-slate-800 rounded-lg">
-            {Array.from({ length: 9 }).map((_, i) => {
-              const isSelected = activeNodes.includes(i);
-              const isIntake = i === 0;
-              const isBypass = i === 8;
-              const isDamaged = i === 2 || i === 6;
+          <div className="relative bg-black/50 p-6 border-2 border-slate-800 rounded-xl shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]">
+            {/* IN/OUT Indicators */}
+            <div className="absolute -left-6 top-[24px] md:top-[32px] flex items-center gap-1 z-20">
+              <span className="text-[10px] font-black font-mono text-blue-400 uppercase tracking-widest bg-slate-900 px-1 border border-blue-500/30">IN</span>
+              <div className="w-4 h-2 bg-blue-500 animate-pulse" />
+            </div>
+            <div className="absolute -right-8 bottom-[24px] md:bottom-[32px] flex items-center gap-1 z-20">
+              <div className={`w-4 h-2 ${puzzleSolved ? "bg-green-500 animate-pulse" : "bg-slate-700"}`} />
+              <span className={`text-[10px] font-black font-mono uppercase tracking-widest px-1 border ${puzzleSolved ? "text-green-400 bg-slate-900 border-green-500/30" : "text-slate-500 bg-slate-900 border-slate-700"}`}>OUT</span>
+            </div>
 
-              let baseClass = "w-20 h-20 border-2 rounded transition-all flex items-center justify-center font-mono text-xs ";
-              
-              if (isDamaged) {
-                baseClass += "border-red-500/30 bg-red-500/10 text-red-500/50 cursor-not-allowed";
-              } else if (isIntake) {
-                baseClass += isSelected ? "border-blue-500 bg-blue-500/30 text-blue-200 shadow-[0_0_15px_rgba(59,130,246,0.5)]" : "border-blue-500/50 bg-blue-500/10 text-blue-500 cursor-pointer";
-              } else if (isBypass) {
-                baseClass += isSelected ? "border-green-500 bg-green-500/30 text-green-200 shadow-[0_0_15px_rgba(34,197,94,0.5)]" : "border-green-500/50 bg-green-500/10 text-green-500 cursor-pointer";
-              } else {
-                baseClass += isSelected ? "border-cyan-400 bg-cyan-400/20 text-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.3)]" : "border-slate-700 hover:border-cyan-400/50 bg-slate-900 cursor-pointer";
-              }
+            <div className="grid grid-cols-5 gap-1 md:gap-2 relative z-10">
+              {grid.map((cell, i) => {
+                const isFilled = filledNodes.has(i);
+                
+                // Calculate visual rotation
+                let base: string[] = [];
+                if (cell.type === 'straight') base = ['N', 'S'];
+                if (cell.type === 'angle') base = ['N', 'E'];
+                if (cell.type === 't') base = ['N', 'E', 'S'];
+                if (cell.type === 'cross') base = ['N', 'E', 'S', 'W'];
+                
+                const DIRS = ['N', 'E', 'S', 'W'];
+                const shifts = cell.rot / 90;
+                const activeDirs = base.map(d => DIRS[(DIRS.indexOf(d) + shifts) % 4]);
 
-              return (
-                <div
-                  key={i}
-                  onClick={() => !isDamaged && handleNodeClick(i)}
-                  className={baseClass}
-                >
-                  {isIntake ? "IN" : isBypass ? "OUT" : isDamaged ? "ERR" : "N-" + i}
-                </div>
-              );
-            })}
+                const pipeColor = isFilled ? "#3b82f6" : "#475569"; // blue-500 : slate-600
+                const glow = isFilled ? "drop-shadow(0 0 4px rgba(59,130,246,0.8))" : "none";
+
+                return (
+                  <div
+                    key={i}
+                    onClick={() => handleNodeRotate(i)}
+                    className={`relative w-12 h-12 md:w-16 md:h-16 rounded transition-colors ${
+                      cell.locked ? "bg-slate-900/80 cursor-not-allowed border border-slate-700/50" : "bg-slate-800 cursor-pointer hover:bg-slate-700"
+                    } ${isFilled ? "bg-blue-900/20" : ""}`}
+                  >
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ filter: glow }}>
+                      {/* Center Hub */}
+                      <circle cx="50%" cy="50%" r={isFilled ? "8" : "6"} fill={pipeColor} />
+                      
+                      {/* Pipe Segments */}
+                      {activeDirs.includes('N') && <line x1="50%" y1="50%" x2="50%" y2="0%" stroke={pipeColor} strokeWidth={isFilled ? "10" : "8"} strokeLinecap="round" />}
+                      {activeDirs.includes('S') && <line x1="50%" y1="50%" x2="50%" y2="100%" stroke={pipeColor} strokeWidth={isFilled ? "10" : "8"} strokeLinecap="round" />}
+                      {activeDirs.includes('E') && <line x1="50%" y1="50%" x2="100%" y2="50%" stroke={pipeColor} strokeWidth={isFilled ? "10" : "8"} strokeLinecap="round" />}
+                      {activeDirs.includes('W') && <line x1="50%" y1="50%" x2="0%" y2="50%" stroke={pipeColor} strokeWidth={isFilled ? "10" : "8"} strokeLinecap="round" />}
+                    </svg>
+                    
+                    {cell.locked && (
+                      <Lock className="absolute top-1 right-1 w-3 h-3 text-slate-600 opacity-50 pointer-events-none" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

@@ -138,104 +138,108 @@ export default function EngineerPanel({ authorizedIds, repairedIds, selectedDist
           </div>
         )}
 
-        <div ref={containerRef} className={`bg-black/80 border-2 rounded-xl p-8 transition-all relative overflow-hidden ${
+        <div ref={containerRef} className={`bg-black/80 border-2 rounded-xl p-6 transition-all relative overflow-hidden ${
           successFlash || !puzzle.isValid ? "border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.4)]" : wrongFlash ? "border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.3)]" : "border-cyan-500/20"
         }`}>
-          {/* Connection Lines SVG */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
-            {Object.entries(puzzle.connections).map(([leftStr, rightIdx]) => {
-              const leftIdx = Number(leftStr);
-              const leftY = 12.5 + leftIdx * 25;
-              const rightY = 12.5 + rightIdx * 25;
-              const wire = WIRE_DEFS[leftIdx];
-              return (
-                <line
-                  key={`wire-${leftStr}`}
-                  x1="30%" y1={`${leftY}%`}
-                  x2="70%" y2={`${rightY}%`}
-                  stroke={wire.hex}
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  style={{ filter: `drop-shadow(0 0 6px ${wire.glow})` }}
-                />
-              );
-            })}
-          </svg>
+          <div className="flex justify-between items-center mb-6 px-2">
+            <p className="text-slate-600 font-mono text-[10px] uppercase tracking-widest w-[35%]">Wires</p>
+            <p className="text-slate-600 font-mono text-[10px] uppercase tracking-widest w-[35%] text-right">Ports</p>
+          </div>
 
-          <div className="flex items-stretch justify-between gap-6 relative z-20">
-            {/* Left: Color NAMES */}
-            <div className="flex flex-col gap-6 w-[35%]">
-              <p className="text-slate-600 font-mono text-[10px] uppercase tracking-widest mb-1">Wires</p>
-              {WIRE_DEFS.map((wire, i) => {
-                const isConnected = puzzle.connections[i] !== undefined;
-                const isActive = selectedLeft === i;
+          <div className="relative h-[300px]">
+            {/* Connection Lines SVG */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
+              {Object.entries(puzzle.connections).map(([leftStr, rightIdx]) => {
+                const leftIdx = Number(leftStr);
+                // Exact alignment: 4 items of h-[48px] in h-[300px] justify-between
+                // Centers are at 24, 108, 192, 276
+                const leftY = 24 + leftIdx * 84;
+                const rightY = 24 + rightIdx * 84;
+                const wire = WIRE_DEFS[leftIdx];
                 return (
-                  <button
-                    key={`L-${i}`}
-                    onClick={() => handleLeftClick(i)}
-                    disabled={!puzzle.isValid}
-                    className={`relative flex items-center gap-3 px-4 py-3 rounded-lg border-2 font-mono font-black text-sm uppercase tracking-[0.2em] transition-all ${
-                      isConnected ? "opacity-40" : isActive ? "scale-105" : puzzle.isValid ? "hover:scale-[1.02]" : ""
-                    }`}
-                    style={{
-                      borderColor: isActive || (!puzzle.isValid) ? wire.hex : `${wire.hex}50`,
-                      backgroundColor: isActive || (!puzzle.isValid) ? `${wire.hex}20` : "rgba(0,0,0,0.5)",
-                      color: wire.hex,
-                      boxShadow: isActive ? `0 0 20px ${wire.glow}, inset 0 0 10px ${wire.glow}` : "none",
-                    }}
-                  >
-                    {wire.name}
-                    {isConnected && <CheckCircle2 className="w-4 h-4 ml-auto" style={{ color: wire.hex }} />}
-                    {/* Connector dot */}
-                    <div
-                      className="absolute right-[-8px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 z-30"
-                      style={{ borderColor: wire.hex, backgroundColor: isActive || isConnected ? wire.hex : "black" }}
-                    />
-                  </button>
+                  <line
+                    key={`wire-${leftStr}`}
+                    x1="35%" y1={leftY}
+                    x2="65%" y2={rightY}
+                    stroke={wire.hex}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    style={{ filter: `drop-shadow(0 0 6px ${wire.glow})` }}
+                  />
                 );
               })}
-            </div>
+            </svg>
 
-            {/* Spacer */}
-            <div className="flex-grow" />
-
-            {/* Right: Color CIRCLES (shuffled) */}
-            <div className="flex flex-col gap-6 w-[35%]">
-              <p className="text-slate-600 font-mono text-[10px] uppercase tracking-widest mb-1 text-right">Ports</p>
-              {puzzle.shuffledRight.map((actualIdx, shuffledIdx) => {
-                const wire = WIRE_DEFS[actualIdx];
-                const isTarget = Object.values(puzzle.connections).includes(shuffledIdx);
-                const canClick = selectedLeft !== null && !isTarget && puzzle.isValid;
-                return (
-                  <button
-                    key={`R-${shuffledIdx}`}
-                    onClick={() => handleRightClick(shuffledIdx)}
-                    disabled={!canClick}
-                    className={`relative flex items-center justify-end gap-3 px-4 py-3 rounded-lg border-2 transition-all ${
-                      isTarget ? "opacity-40" : canClick ? "hover:scale-[1.02] cursor-pointer" : "cursor-default opacity-60"
-                    }`}
-                    style={{
-                      borderColor: isTarget || !puzzle.isValid ? `${wire.hex}60` : `${wire.hex}30`,
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                    }}
-                  >
-                    {/* Connector dot */}
-                    <div
-                      className="absolute left-[-8px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 z-30"
-                      style={{ borderColor: wire.hex, backgroundColor: isTarget ? wire.hex : "black" }}
-                    />
-                    {/* Physical colored node */}
-                    <div
-                      className="w-8 h-8 rounded-full"
+            <div className="absolute inset-0 flex items-stretch justify-between z-20 pointer-events-none">
+              {/* Left: Color NAMES */}
+              <div className="flex flex-col justify-between w-[35%] h-full pointer-events-auto">
+                {WIRE_DEFS.map((wire, i) => {
+                  const isConnected = puzzle.connections[i] !== undefined;
+                  const isActive = selectedLeft === i;
+                  return (
+                    <button
+                      key={`L-${i}`}
+                      onClick={() => handleLeftClick(i)}
+                      disabled={!puzzle.isValid}
+                      className={`relative flex items-center gap-3 px-4 h-[48px] rounded-lg border-2 font-mono font-black text-sm uppercase tracking-[0.2em] transition-all ${
+                        isConnected ? "opacity-40" : isActive ? "scale-105" : puzzle.isValid ? "hover:scale-[1.02]" : ""
+                      }`}
                       style={{
-                         backgroundColor: wire.hex,
-                         boxShadow: `0 0 12px ${wire.glow}, 0 0 24px ${wire.glow}`,
+                        borderColor: isActive || (!puzzle.isValid) ? wire.hex : `${wire.hex}50`,
+                        backgroundColor: isActive || (!puzzle.isValid) ? `${wire.hex}20` : "rgba(0,0,0,0.5)",
+                        color: wire.hex,
+                        boxShadow: isActive ? `0 0 20px ${wire.glow}, inset 0 0 10px ${wire.glow}` : "none",
                       }}
-                    />
-                    {isTarget && <CheckCircle2 className="w-4 h-4 text-slate-400" />}
-                  </button>
-                );
-              })}
+                    >
+                      {wire.name}
+                      {isConnected && <CheckCircle2 className="w-4 h-4 ml-auto" style={{ color: wire.hex }} />}
+                      {/* Connector dot */}
+                      <div
+                        className="absolute right-[-8px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 z-30"
+                        style={{ borderColor: wire.hex, backgroundColor: isActive || isConnected ? wire.hex : "black" }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right: Color CIRCLES (shuffled) */}
+              <div className="flex flex-col justify-between w-[35%] h-full pointer-events-auto">
+                {puzzle.shuffledRight.map((actualIdx, shuffledIdx) => {
+                  const wire = WIRE_DEFS[actualIdx];
+                  const isTarget = Object.values(puzzle.connections).includes(shuffledIdx);
+                  const canClick = selectedLeft !== null && !isTarget && puzzle.isValid;
+                  return (
+                    <button
+                      key={`R-${shuffledIdx}`}
+                      onClick={() => handleRightClick(shuffledIdx)}
+                      disabled={!canClick}
+                      className={`relative flex items-center justify-end gap-3 px-4 h-[48px] rounded-lg border-2 transition-all ${
+                        isTarget ? "opacity-40" : canClick ? "hover:scale-[1.02] cursor-pointer" : "cursor-default opacity-60"
+                      }`}
+                      style={{
+                        borderColor: isTarget || !puzzle.isValid ? `${wire.hex}60` : `${wire.hex}30`,
+                        backgroundColor: "rgba(0,0,0,0.5)",
+                      }}
+                    >
+                      {/* Connector dot */}
+                      <div
+                        className="absolute left-[-8px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 z-30"
+                        style={{ borderColor: wire.hex, backgroundColor: isTarget ? wire.hex : "black" }}
+                      />
+                      {/* Physical colored node */}
+                      <div
+                        className="w-8 h-8 rounded-full"
+                        style={{
+                           backgroundColor: wire.hex,
+                           boxShadow: `0 0 12px ${wire.glow}, 0 0 24px ${wire.glow}`,
+                        }}
+                      />
+                      {isTarget && <CheckCircle2 className="w-4 h-4 text-slate-400" />}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

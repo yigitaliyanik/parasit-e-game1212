@@ -14,6 +14,24 @@ export default function JournalistPanel({ selectedDistrictIds }: JournalistPanel
   const [visibleClues, setVisibleClues] = useState<number[]>([]);
   const [typedTexts, setTypedTexts] = useState<Record<number, string>>({});
   const abortRef = useRef(false);
+  const typedTextsRef = useRef(typedTexts);
+
+  // Keep ref in sync for the async reveal loop
+  useEffect(() => {
+    typedTextsRef.current = typedTexts;
+  }, [typedTexts]);
+
+  // Load persisted clues on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem("journalist_typed_clues");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setTypedTexts(parsed);
+        setVisibleClues(Object.keys(parsed).map(Number));
+      } catch (e) {}
+    }
+  }, []);
 
   // Resolve the 3 selected districts from the master list
   const selectedDistricts: DistrictData[] = useMemo(() => {
@@ -36,24 +54,50 @@ export default function JournalistPanel({ selectedDistrictIds }: JournalistPanel
       setTypedTexts(prev => ({ ...prev, [index]: current }));
       await new Promise(r => setTimeout(r, 15 + Math.random() * 25));
     }
+    
+    // Save to session storage once fully typed
+    setTypedTexts(prev => {
+      sessionStorage.setItem("journalist_typed_clues", JSON.stringify(prev));
+      return prev;
+    });
   }, []);
+
+  const districtIdsStr = selectedDistrictIds.join(",");
 
   useEffect(() => {
     abortRef.current = false;
     const revealClues = async () => {
+      // Initial mount delay
+      await new Promise(r => setTimeout(r, 500));
+      if (abortRef.current) return;
+
       for (let i = 0; i < selectedDistricts.length; i++) {
         if (abortRef.current) return;
-        await new Promise(r => setTimeout(r, i === 0 ? 500 : 2000));
+        
+        const fullText = selectedDistricts[i].clue;
+        const currentTyped = typedTextsRef.current[i];
+
+        // Skip animation if already fully typed
+        if (currentTyped && currentTyped.length >= fullText.length) {
+          setVisibleClues(prev => Array.from(new Set([...prev, i])));
+          continue;
+        }
+
+        if (i !== 0) {
+          await new Promise(r => setTimeout(r, 1500));
+        }
         if (abortRef.current) return;
-        setVisibleClues(prev => [...prev, i]);
-        await typeClue(i, selectedDistricts[i].clue, abortRef);
+        
+        setVisibleClues(prev => Array.from(new Set([...prev, i])));
+        await typeClue(i, fullText, abortRef);
       }
     };
     revealClues();
     return () => {
       abortRef.current = true;
     };
-  }, [typeClue, selectedDistricts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [districtIdsStr]);
 
   const dates = useMemo(() => [
     "VOL. XLVII \u2022 NO. 2891",
