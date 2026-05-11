@@ -167,7 +167,7 @@ export default function JournalistPanel({ selectedDistrictIds }: JournalistPanel
                 <div className="absolute top-0 left-0 w-[1px] h-full bg-gradient-to-b from-cyan-500/20 via-transparent to-amber-500/20" />
                 <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-amber-500/20 via-transparent to-cyan-500/20" />
 
-                <div className="bg-[#0d0a05] relative z-10 p-0">
+                <div className="bg-black relative z-10 p-0">
                   {/* Masthead */}
                   <div className="bg-gradient-to-r from-amber-900/30 via-amber-800/40 to-amber-900/30 px-5 py-3 border-b border-amber-800/30">
                     <div className="flex items-center justify-between">

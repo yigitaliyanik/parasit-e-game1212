@@ -72,7 +72,7 @@ export default function AnalystPanel({ foundIds, onSubmitId }: AnalystPanelProps
       </p>
 
       {/* ── Blueprint Map ── */}
-      <div className="flex-grow bg-[#020a04] border-2 border-green-500/20 rounded-xl relative overflow-hidden">
+      <div className="flex-grow bg-black border-2 border-green-500/20 rounded-xl relative overflow-hidden">
         {/* Radial center glow */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -208,7 +208,7 @@ export default function AnalystPanel({ foundIds, onSubmitId }: AnalystPanelProps
               transition={{ duration: 0.2, ease: "easeOut" }}
               className="absolute bottom-4 left-4 right-4 z-50"
             >
-              <div className="bg-[#050f08] border border-green-500/60 rounded-lg p-5 shadow-[0_0_30px_rgba(16,185,129,0.2)] relative overflow-hidden">
+              <div className="bg-black border border-green-500/60 rounded-lg p-5 shadow-[0_0_30px_rgba(16,185,129,0.2)] relative overflow-hidden">
                 {/* Scanlines */}
                 <div className="absolute inset-0 pointer-events-none opacity-10 bg-[repeating-linear-gradient(transparent,transparent_2px,#10b981_2px,#10b981_3px)]" />
 

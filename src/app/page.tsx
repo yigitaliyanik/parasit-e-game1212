@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, User, Cpu, Network } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MatrixRain } from "@/components/MatrixRain";
 
 type IntroPhase = "matrix" | "main";
 
@@ -128,7 +129,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1 }}
-          className="min-h-screen bg-[#000000] text-slate-200 flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden"
+          className="min-h-screen bg-black text-slate-200 flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden"
         >
           {/* Subtle Background Matrix Rain */}
           <div className="absolute inset-0 z-0 opacity-15 grayscale pointer-events-none">
@@ -176,7 +177,7 @@ export default function Home() {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#00ff41]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Cpu className="w-8 h-8 text-[#00ff41]/40 group-hover:text-[#00ff41] mb-4 transition-colors" />
-                <h2 className="text-3xl font-black uppercase italic tracking-tighter group-hover:scale-105 transition-transform">Initialize</h2>
+                <h2 className="text-3xl font-black uppercase italic tracking-tighter group-hover:scale-105 transition-transform">Create Lobby</h2>
                 <p className="text-[#00ff41]/60 font-mono text-[10px] uppercase tracking-widest mt-2">New Room Access</p>
               </button>
 
@@ -204,7 +205,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <>
-                    <h2 className="text-3xl font-black uppercase italic tracking-tighter group-hover:scale-105 transition-transform text-slate-400 group-hover:text-white">Decrypt</h2>
+                    <h2 className="text-3xl font-black uppercase italic tracking-tighter group-hover:scale-105 transition-transform text-slate-400 group-hover:text-white">Join Lobby</h2>
                     <p className="text-slate-600 font-mono text-[10px] uppercase tracking-widest mt-2 group-hover:text-slate-400">Join Active Node</p>
                   </>
                 )}
@@ -229,80 +230,3 @@ export default function Home() {
     </AnimatePresence>
   );
 }
-
-const MatrixRain = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const updateSize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    updateSize();
-
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+{}[]|:;"<>,.?/~\\'.split('');
-    const fontSize = 16;
-    let columns = canvas.width / fontSize;
-    let drops: number[] = [];
-    
-    const initDrops = () => {
-      columns = canvas.width / fontSize;
-      drops = [];
-      for (let x = 0; x < columns; x++) {
-        drops[x] = Math.random() * -100;
-      }
-    };
-    initDrops();
-
-    let animationFrameId: number;
-    let lastDrawTime = 0;
-    const drawInterval = 40; // ~25fps for a moodier look
-
-    const draw = (time: number) => {
-      animationFrameId = requestAnimationFrame(draw);
-
-      if (time - lastDrawTime < drawInterval) return;
-      lastDrawTime = time;
-
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      ctx.fillStyle = '#00ff41'; // Cyberpunk Green
-      ctx.font = `bold ${fontSize}px monospace`;
-
-      for (let i = 0; i < drops.length; i++) {
-        const text = chars[Math.floor(Math.random() * chars.length)];
-        // Randomly make some characters brighter
-        if (Math.random() > 0.95) ctx.fillStyle = '#ffffff';
-        else ctx.fillStyle = '#00ff41';
-
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-          drops[i] = 0;
-        }
-        drops[i]++;
-      }
-    };
-
-    animationFrameId = requestAnimationFrame(draw);
-
-    const handleResize = () => {
-      updateSize();
-      initDrops();
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
-  return <canvas ref={canvasRef} className="absolute inset-0 z-0" />;
-};

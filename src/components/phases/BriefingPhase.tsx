@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Terminal } from "lucide-react";
 import { useGameSession } from "@/hooks/useGameSession";
 import { Role } from "@/lib/types";
+import { MatrixRain } from "@/components/MatrixRain";
 
 interface BriefingPhaseProps {
   roomId: string;
@@ -110,10 +111,15 @@ Good luck!`,
   if (!session || !currentPlayer) return null;
 
   return (
-    <div className="min-h-screen bg-black text-[#00ffff] font-mono flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-black text-[#00ff41] font-mono p-4 md:p-12 relative overflow-hidden flex flex-col items-center justify-center">
+      {/* Background Matrix Rain */}
+      <div className="absolute inset-0 z-0 opacity-10 grayscale pointer-events-none">
+        <MatrixRain />
+      </div>
+
       {/* Visual FX */}
       <div className="scanline" />
-      <div className="noise-bg" />
+      <div className="noise-bg opacity-20" />
 
       {/* Red Glitch Transition */}
       <AnimatePresence>
@@ -121,27 +127,28 @@ Good luck!`,
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[100] bg-red-600/30 flex items-center justify-center overflow-hidden"
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-[#ff003c]/20 flex items-center justify-center overflow-hidden"
           >
-            <div className="absolute inset-0 bg-red-900 animate-pulse-red mix-blend-overlay" />
-            <div className="text-red-500 text-9xl font-black italic tracking-tighter scale-150 opacity-50 blur-sm">
+            <div className="absolute inset-0 bg-[#ff003c]/10 animate-pulse-red mix-blend-overlay" />
+            <div className="text-[#ff003c] text-9xl font-black italic tracking-tighter scale-150 opacity-40 blur-sm">
               [SYSTEM_REBOOT]
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="w-full max-w-4xl bg-[#030712] border border-[#00ffff]/30 p-10 rounded-lg shadow-[0_0_50px_rgba(0,255,255,0.1)] relative z-10 min-h-[500px] flex flex-col">
-        <div className="flex items-center gap-3 mb-8 border-b border-[#00ffff]/20 pb-4">
-          <Terminal className="w-6 h-6 animate-pulse" />
-          <span className="text-sm tracking-widest uppercase opacity-70">Secure Uplink // ECO_AI_BRIEFING</span>
+      <div className="w-full max-w-4xl bg-black border border-[#00ff41]/30 p-10 rounded-2xl shadow-[0_0_50px_rgba(0,255,65,0.05)] relative z-10 min-h-[500px] flex flex-col backdrop-blur-sm">
+        <div className="flex items-center gap-3 mb-8 border-b border-[#00ff41]/20 pb-4">
+          <Terminal className="w-6 h-6 animate-pulse text-[#00ff41]" />
+          <span className="text-sm tracking-widest uppercase opacity-70 font-bold">Secure Uplink // ECO_AI_BRIEFING</span>
         </div>
 
         <div className="flex-grow space-y-6">
           {currentStep === "phase1" && (
-            <div className="whitespace-pre-wrap leading-relaxed text-lg">
+            <div className="whitespace-pre-wrap leading-relaxed text-lg font-medium">
               {phase1Display}
-              {!phase1Complete && <span className="animate-pulse ml-1 inline-block w-2 h-5 bg-[#00ffff]" />}
+              {!phase1Complete && <span className="animate-pulse ml-1 inline-block w-2 h-5 bg-[#00ff41]" />}
             </div>
           )}
 
@@ -150,7 +157,7 @@ Good luck!`,
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-3xl font-black tracking-[0.3em] uppercase animate-pulse text-[#00ff9d]"
+                className="text-3xl font-black tracking-[0.3em] uppercase animate-pulse text-[#00ff41]"
               >
                 Isolating Connections...
               </motion.div>
@@ -159,18 +166,18 @@ Good luck!`,
 
           {currentStep === "phase2" && (
             <div className="space-y-8 animate-in fade-in duration-700">
-              <div className="whitespace-pre-wrap leading-relaxed text-lg italic">
+              <div className="whitespace-pre-wrap leading-relaxed text-lg italic text-[#00ff41]/90">
                 {phase2Display}
-                {!phase2Complete && <span className="animate-pulse ml-1 inline-block w-2 h-5 bg-[#00ffff]" />}
+                {!phase2Complete && <span className="animate-pulse ml-1 inline-block w-2 h-5 bg-[#00ff41]" />}
               </div>
 
               {phase2Complete && (
-                <div className="pt-8 border-t border-[#00ffff]/10 flex flex-col items-center gap-6">
+                <div className="pt-8 border-t border-[#00ff41]/10 flex flex-col items-center gap-6">
                   {isLocalReady ? (
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-[#00ff9d] text-lg font-bold tracking-widest uppercase animate-pulse"
+                      className="text-[#00ff41] text-lg font-bold tracking-widest uppercase animate-pulse"
                     >
                       Waiting for other team members...
                     </motion.div>
@@ -178,10 +185,10 @@ Good luck!`,
                     <motion.button
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(0, 255, 65, 0.3)" }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setBriefingReady(role, true)}
-                      className="px-12 py-5 bg-[#00ffff] text-black font-black text-xl uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)] transition-all"
+                      className="px-12 py-5 bg-black border-2 border-[#00ff41] text-[#00ff41] font-black text-xl uppercase tracking-[0.2em] rounded-xl shadow-[0_0_20px_rgba(0,255,65,0.1)] transition-all hover:bg-[#00ff41] hover:text-black"
                     >
                       [ Understood / Start Mission ]
                     </motion.button>
@@ -190,6 +197,10 @@ Good luck!`,
               )}
             </div>
           )}
+        </div>
+
+        <div className="absolute bottom-4 right-6 text-[10px] tracking-widest font-mono text-[#00ff41]/20 uppercase">
+          Transmission Encrypted // Quantum-Safe AES-256
         </div>
       </div>
     </div>

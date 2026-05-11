@@ -40,7 +40,7 @@ export default function GameTimer({ startTime, penaltyTime = 0, onTimeUp }: Game
   const isCritical = remaining < 60; // < 1 minute
 
   return (
-    <div className="flex items-center justify-center gap-3 py-3 px-6 bg-[#030712]/90 border-b border-white/10 relative z-20">
+    <div className="flex items-center justify-center gap-3 py-3 px-6 bg-black/90 border-b border-white/10 relative z-20">
       <Clock className={`w-5 h-5 ${isCritical ? "text-red-500 animate-pulse" : isUrgent ? "text-amber-400" : "text-[#00ffff]"}`} />
       <div
         className={`font-mono text-2xl font-black tracking-[0.3em] ${

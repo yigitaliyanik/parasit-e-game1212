@@ -182,7 +182,7 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
 
   if (!session || !currentUser || !currentPlayer) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#020617] text-emerald-400">
+      <div className="flex items-center justify-center h-screen bg-black text-emerald-400">
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
     );
@@ -211,7 +211,7 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-6 md:p-12 flex flex-col font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-black text-slate-200 p-6 md:p-12 flex flex-col font-sans relative overflow-hidden">
       {/* Background Decor */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.03),transparent_50%)] pointer-events-none" />
 
