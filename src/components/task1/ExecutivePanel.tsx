@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Lock, Unlock, CheckCircle2, Terminal } from "lucide-react";
-import { TRANSFORMER_DATA } from "@/lib/types";
+import { ALL_DISTRICTS } from "@/lib/types";
 
 interface ExecutivePanelProps {
   analystFoundIds: string[]; // Unused now, but kept for compatibility
@@ -82,7 +82,7 @@ export default function ExecutivePanel({ authorizedIds, repairedIds, onAuthorize
           ) : (
             authorizedIds.map((id, i) => {
               const isFixed = repairedIds.includes(id);
-              const validTransformer = TRANSFORMER_DATA.find(t => t.id === id);
+              const validTransformer = ALL_DISTRICTS.find(t => t.id === id);
 
               let borderCls = "border-fuchsia-500/40 shadow-[0_0_15px_rgba(232,121,249,0.1)]";
               let iconBg = "bg-fuchsia-500/20";
