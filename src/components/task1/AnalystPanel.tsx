@@ -45,7 +45,7 @@ const BLOCKS = [
   { x: 8, y: 30, w: 6, h: 12 },
 ];
 
-export default function AnalystPanel({}: AnalystPanelProps) {
+export default function AnalystPanel({ foundIds, onSubmitId }: AnalystPanelProps) {
   const [selectedDistrict, setSelectedDistrict] = useState<typeof ALL_DISTRICTS[0] | null>(null);
 
   const handleDistrictClick = (d: typeof ALL_DISTRICTS[0]) => {

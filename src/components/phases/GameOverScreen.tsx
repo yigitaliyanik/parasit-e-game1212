@@ -4,7 +4,7 @@ import { useGameSession } from "@/hooks/useGameSession";
 import { motion } from "framer-motion";
 import { Skull, Clock, Zap, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { TRANSFORMER_DATA } from "@/lib/types";
+import { ALL_DISTRICTS } from "@/lib/types";
 
 interface GameOverScreenProps {
   roomId: string;
@@ -71,7 +71,7 @@ export default function GameOverScreen({ roomId }: GameOverScreenProps) {
           <div className="bg-[#030712]/80 border border-red-500/20 rounded-lg p-6">
             <Zap className="w-6 h-6 text-red-400 mx-auto mb-3 opacity-60" />
             <p className="text-red-400 font-mono text-3xl font-black">
-              {repairedCount} / {TRANSFORMER_DATA.length}
+              {repairedCount} / {ALL_DISTRICTS.length}
             </p>
             <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mt-2">
               Transformers Repaired

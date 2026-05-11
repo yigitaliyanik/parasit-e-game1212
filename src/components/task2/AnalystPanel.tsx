@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 interface AnalystPanelProps {
   unlockRequested: boolean;
   unlocked: boolean;
-  onRequestUnlock: () => void;
+  onRequestUnlock: () => Promise<void>;
 }
 
 export default function AnalystPanel({

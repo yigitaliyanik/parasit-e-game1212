@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useCallback } from 'react';
 import { ref, onValue, set, update, get, increment, onDisconnect } from 'firebase/database';
 import { db, signInAnonymousUser } from '@/lib/firebase';

@@ -6,12 +6,12 @@ import { motion } from "framer-motion";
 
 interface EngineerPanelProps {
   codeEntered: boolean;
-  onSubmitCode: () => void;
+  onSubmitCode: () => Promise<void>;
   pipeAccessRequested: boolean;
   pipeAccessGranted: boolean;
-  onRequestPipeAccess: () => void;
+  onRequestPipeAccess: () => Promise<void>;
   puzzleSolved: boolean;
-  onPuzzleComplete: () => void;
+  onPuzzleComplete: () => Promise<void>;
 }
 
 export default function EngineerPanel({

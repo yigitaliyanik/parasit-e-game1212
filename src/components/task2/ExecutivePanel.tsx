@@ -7,12 +7,12 @@ import { motion } from "framer-motion";
 interface ExecutivePanelProps {
   analystUnlockRequested: boolean;
   analystUnlocked: boolean;
-  onUnlockAnalyst: () => void;
+  onUnlockAnalyst: () => Promise<void>;
   engineerPipeAccessRequested: boolean;
   engineerPipeAccessGranted: boolean;
-  onGrantPipeAccess: (granted: boolean) => void;
+  onGrantPipeAccess: (granted: boolean) => Promise<void>;
   executiveManualChoice?: string;
-  onSubmitManualChoice: (choice: string) => void;
+  onSubmitManualChoice: (choice: string) => Promise<void>;
 }
 
 export default function ExecutivePanel({

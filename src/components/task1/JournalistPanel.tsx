@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface JournalistPanelProps {
   selectedDistrictIds: string[];
+  onPenalty?: () => void;
 }
 
 export default function JournalistPanel({ selectedDistrictIds }: JournalistPanelProps) {
