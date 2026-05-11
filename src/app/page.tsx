@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldAlert, User } from "lucide-react";
+import { ShieldAlert, User, Cpu, Network } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 type IntroPhase = "matrix" | "main";
 
@@ -23,44 +24,30 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // Hydration fix: defer mounting to client-side only
-    const mountTimeout = setTimeout(() => {
-      setMounted(true);
-      
-      const storedName = localStorage.getItem("eco_player_name");
-      if (storedName) setAlias(storedName);
-
-      // Intro sequence logic
-      const hasSeenIntro = sessionStorage.getItem("parasite_intro_seen");
-      if (hasSeenIntro) {
-        setIntroPhase("main");
-      }
-    }, 0);
+    setMounted(true);
     
-    // Intro sequence logic (continued)
-    const hasSeenIntro = sessionStorage.getItem("parasite_intro_seen");
-    let introTimer: NodeJS.Timeout;
+    const storedName = localStorage.getItem("eco_player_name");
+    if (storedName) setAlias(storedName);
 
-    if (!hasSeenIntro) {
-      // Matrix Phase (0-4s)
-      introTimer = setTimeout(() => {
-        setIntroPhase("main");
-        sessionStorage.setItem("parasite_intro_seen", "true");
-      }, 4000);
+    const hasSeenIntro = sessionStorage.getItem("parasite_intro_seen");
+    if (hasSeenIntro) {
+      setIntroPhase("main");
     }
 
-    // Allow escape to skip
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") skipIntro();
+    const handleInteraction = (e: KeyboardEvent | MouseEvent) => {
+      if (introPhase === "matrix") {
+        skipIntro();
+      }
     };
-    window.addEventListener("keydown", handleKeyDown);
+
+    window.addEventListener("keydown", handleInteraction);
+    window.addEventListener("mousedown", handleInteraction);
 
     return () => {
-      clearTimeout(mountTimeout);
-      clearTimeout(introTimer);
-      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keydown", handleInteraction);
+      window.removeEventListener("mousedown", handleInteraction);
     };
-  }, []);
+  }, [introPhase]);
 
   if (!mounted) return null;
 
@@ -95,104 +82,151 @@ export default function Home() {
     setTimeout(() => router.push(`/room/${joinCode.toUpperCase()}`), 500);
   };
 
-  // Render Matrix Intro Phase
-  if (introPhase === "matrix") {
-    return (
-      <div className="relative min-h-screen bg-black overflow-hidden select-none">
-        <MatrixRain />
-        {/* Masking Layer: White text becomes transparent, black covers the rest */}
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black mix-blend-multiply pointer-events-none">
-          <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter text-white">
-            Parasit[e]
-          </h1>
-        </div>
-        <button onClick={skipIntro} className="absolute bottom-6 right-6 z-20 text-slate-600 text-xs tracking-widest hover:text-slate-400">
-          SKIP [ESC]
-        </button>
-      </div>
-    );
-  }
-
-  // Render Phase 3: Main UI
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden">
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes slide-up-fade {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-intro {
-          animation: slide-up-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-      `}} />
-      
-      <div className="max-w-4xl w-full space-y-12 animate-intro relative z-10">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-block p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
-            <ShieldAlert className="w-12 h-12 text-emerald-400" />
+    <AnimatePresence mode="wait">
+      {introPhase === "matrix" ? (
+        <motion.div 
+          key="matrix-intro"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, filter: "blur(20px)" }}
+          transition={{ duration: 1 }}
+          className="relative min-h-screen bg-black overflow-hidden select-none cursor-pointer"
+        >
+          <MatrixRain />
+          
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
+            <motion.h1 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 1.5, ease: "easeOut" }}
+              className="text-8xl md:text-9xl font-black uppercase italic tracking-tighter text-white"
+              style={{
+                textShadow: "0 0 20px #00ff41, 0 0 40px #00ff4166",
+                letterSpacing: "-0.05em"
+              }}
+            >
+              Parasit[e]
+            </motion.h1>
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.2, 1, 0.2] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              className="absolute bottom-20 text-[#00ff41] font-mono text-xl tracking-[0.4em] uppercase font-bold"
+            >
+              Initialize System
+            </motion.div>
           </div>
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic">
-            Parasit<span className="text-emerald-400">[</span>e<span className="text-emerald-400">]</span>
-          </h1>
-          <p className="text-slate-500 font-mono text-sm tracking-[0.3em] uppercase">System Initialization Required</p>
-        </div>
 
-        {/* Username Input */}
-        <div className="max-w-md mx-auto w-full space-y-3">
-          <label className="block text-slate-500 font-mono text-xs uppercase tracking-widest text-center">Identity Verification</label>
-          <div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-            <input
-              type="text"
-              value={alias}
-              onChange={(e) => { setAlias(e.target.value); setError(""); }}
-              className="w-full bg-slate-900/50 border-2 border-slate-800 rounded-2xl py-6 pl-12 pr-6 text-xl font-bold focus:border-emerald-500/50 focus:outline-none transition-all placeholder:text-slate-700"
-              placeholder="ENTER USERNAME"
-            />
+          <div className="absolute bottom-6 right-6 z-20 text-emerald-900/40 text-[10px] tracking-widest font-mono">
+            SECURE CONNECTION ESTABLISHED // PORT 8080
           </div>
-          {error && <p className="text-red-400 text-xs font-mono text-center">{error}</p>}
-        </div>
+        </motion.div>
+      ) : (
+        <motion.div 
+          key="lobby-main"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          className="min-h-screen bg-[#000000] text-slate-200 flex flex-col items-center justify-center p-6 font-sans relative overflow-hidden"
+        >
+          {/* Subtle Background Matrix Rain */}
+          <div className="absolute inset-0 z-0 opacity-15 grayscale pointer-events-none">
+            <MatrixRain />
+          </div>
 
-        {/* Big Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-64">
-          <button
-            onClick={handleCreate}
-            disabled={isLoading}
-            className="group relative flex flex-col items-center justify-center bg-emerald-500/10 border-2 border-emerald-500/20 rounded-3xl hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all active:scale-[0.98]"
-          >
-            <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-2 group-hover:scale-110 transition-transform">Create Game</h2>
-            <p className="text-emerald-400/60 font-mono text-xs uppercase tracking-widest">Start New Session</p>
-          </button>
+          <div className="max-w-4xl w-full space-y-12 relative z-10">
+            {/* Header */}
+            <div className="text-center space-y-4">
+              <motion.div 
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="inline-block p-4 rounded-2xl bg-[#00ff41]/10 border border-[#00ff41]/20 mb-4 shadow-[0_0_20px_rgba(0,255,65,0.1)]"
+              >
+                <ShieldAlert className="w-12 h-12 text-[#00ff41]" />
+              </motion.div>
+              <h1 className="text-6xl md:text-8xl font-black tracking-tighter uppercase italic">
+                Parasit<span className="text-[#00ff41]">[</span>e<span className="text-[#00ff41]">]</span>
+              </h1>
+              <p className="text-slate-500 font-mono text-sm tracking-[0.3em] uppercase">Operations Command Center</p>
+            </div>
 
-          <button
-            onClick={handleJoin}
-            disabled={isLoading}
-            className="group relative flex flex-col items-center justify-center bg-slate-900 border-2 border-slate-800 rounded-3xl hover:border-slate-700 transition-all active:scale-[0.98]"
-          >
-            {showJoinInput ? (
-              <div className="flex flex-col items-center gap-4 w-full px-8">
+            {/* Username Input */}
+            <div className="max-w-md mx-auto w-full space-y-3">
+              <label className="block text-slate-500 font-mono text-xs uppercase tracking-widest text-center">User Identification</label>
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-[#00ff41] transition-colors" />
                 <input
-                  autoFocus
-                  maxLength={5}
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                  className="w-full bg-transparent border-b-2 border-slate-700 text-center text-4xl font-black focus:border-emerald-500 focus:outline-none transition-all tracking-[0.5em]"
-                  placeholder="CODE"
+                  type="text"
+                  value={alias}
+                  onChange={(e) => { setAlias(e.target.value); setError(""); }}
+                  className="w-full bg-black border-2 border-slate-800/50 rounded-2xl py-6 pl-12 pr-6 text-xl font-bold focus:border-[#00ff41]/50 focus:shadow-[0_0_15px_rgba(0,255,65,0.2)] focus:outline-none transition-all placeholder:text-slate-800 text-white font-mono"
+                  placeholder="USERNAME_ID"
                 />
-                <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Press again to Join</p>
               </div>
-            ) : (
-              <>
-                <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-2 group-hover:scale-110 transition-transform">Join Game</h2>
-                <p className="text-slate-500 font-mono text-xs uppercase tracking-widest">Enter Operation Code</p>
-              </>
-            )}
-          </button>
-        </div>
+              {error && <p className="text-[#ff003c] text-xs font-mono text-center animate-pulse">{error}</p>}
+            </div>
 
-      </div>
-    </div>
+            {/* Neon Bordered Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto w-full">
+              <button
+                onClick={handleCreate}
+                disabled={isLoading}
+                className="group relative h-48 flex flex-col items-center justify-center bg-black border-2 border-[#00ff41]/20 rounded-2xl hover:border-[#00ff41] hover:shadow-[0_0_30px_rgba(0,255,65,0.15)] transition-all active:scale-[0.98] overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-[#00ff41]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Cpu className="w-8 h-8 text-[#00ff41]/40 group-hover:text-[#00ff41] mb-4 transition-colors" />
+                <h2 className="text-3xl font-black uppercase italic tracking-tighter group-hover:scale-105 transition-transform">Initialize</h2>
+                <p className="text-[#00ff41]/60 font-mono text-[10px] uppercase tracking-widest mt-2">New Room Access</p>
+              </button>
+
+              <button
+                onClick={handleJoin}
+                disabled={isLoading}
+                className={`group relative h-48 flex flex-col items-center justify-center bg-black border-2 transition-all active:scale-[0.98] overflow-hidden rounded-2xl ${
+                  showJoinInput ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.2)]' : 'border-slate-800 hover:border-white/20'
+                }`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Network className="w-8 h-8 text-slate-600 group-hover:text-white mb-4 transition-colors" />
+                
+                {showJoinInput ? (
+                  <div className="flex flex-col items-center gap-2 w-full px-8 animate-in fade-in zoom-in duration-300">
+                    <input
+                      autoFocus
+                      maxLength={5}
+                      value={joinCode}
+                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                      className="w-full bg-transparent border-b-2 border-[#00ff41] text-center text-4xl font-black focus:outline-none transition-all tracking-[0.5em] text-[#00ff41]"
+                      placeholder="XXXXX"
+                    />
+                    <p className="text-emerald-500 font-mono text-[10px] uppercase tracking-widest font-bold">Transmit Code</p>
+                  </div>
+                ) : (
+                  <>
+                    <h2 className="text-3xl font-black uppercase italic tracking-tighter group-hover:scale-105 transition-transform text-slate-400 group-hover:text-white">Decrypt</h2>
+                    <p className="text-slate-600 font-mono text-[10px] uppercase tracking-widest mt-2 group-hover:text-slate-400">Join Active Node</p>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Exit/Cancel if joining */}
+            {showJoinInput && (
+              <div className="flex justify-center">
+                <button 
+                  onClick={() => { setShowJoinInput(false); setJoinCode(""); setError(""); }}
+                  className="text-[#ff003c]/40 hover:text-[#ff003c] font-mono text-[10px] uppercase tracking-widest transition-colors flex items-center gap-2"
+                >
+                  <span className="w-1 h-1 bg-[#ff003c] rounded-full" /> 
+                  Abort Join Protocol
+                </button>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -205,20 +239,29 @@ const MatrixRain = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const updateSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    updateSize();
 
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+{}[]|:;"<>,.?/~\\'.split('');
     const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const drops: number[] = [];
-    for (let x = 0; x < columns; x++) {
-      drops[x] = 1;
-    }
+    let columns = canvas.width / fontSize;
+    let drops: number[] = [];
+    
+    const initDrops = () => {
+      columns = canvas.width / fontSize;
+      drops = [];
+      for (let x = 0; x < columns; x++) {
+        drops[x] = Math.random() * -100;
+      }
+    };
+    initDrops();
 
     let animationFrameId: number;
     let lastDrawTime = 0;
-    const drawInterval = 33; // ~30fps
+    const drawInterval = 40; // ~25fps for a moodier look
 
     const draw = (time: number) => {
       animationFrameId = requestAnimationFrame(draw);
@@ -226,14 +269,18 @@ const MatrixRain = () => {
       if (time - lastDrawTime < drawInterval) return;
       lastDrawTime = time;
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      ctx.fillStyle = '#10b981'; // emerald-500
-      ctx.font = fontSize + 'px monospace';
+      ctx.fillStyle = '#00ff41'; // Cyberpunk Green
+      ctx.font = `bold ${fontSize}px monospace`;
 
       for (let i = 0; i < drops.length; i++) {
         const text = chars[Math.floor(Math.random() * chars.length)];
+        // Randomly make some characters brighter
+        if (Math.random() > 0.95) ctx.fillStyle = '#ffffff';
+        else ctx.fillStyle = '#00ff41';
+
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
         if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
@@ -246,8 +293,8 @@ const MatrixRain = () => {
     animationFrameId = requestAnimationFrame(draw);
 
     const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      updateSize();
+      initDrops();
     };
     window.addEventListener('resize', handleResize);
 
@@ -257,5 +304,5 @@ const MatrixRain = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-80" />;
+  return <canvas ref={canvasRef} className="absolute inset-0 z-0" />;
 };
