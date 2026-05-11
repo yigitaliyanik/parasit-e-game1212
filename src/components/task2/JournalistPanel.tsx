@@ -45,7 +45,7 @@ export default function JournalistPanel() {
               className={`p-4 text-left border rounded transition-all ${
                 activeTab === idx
                   ? "border-amber-400 bg-amber-400/10"
-                  : "border-slate-800 bg-black/40 hover:border-amber-400/30"
+                  : "border-slate-800 bg-black hover:border-amber-400/30"
               }`}
             >
               <span className="font-mono text-xs text-amber-400/50 block mb-1">
@@ -58,7 +58,7 @@ export default function JournalistPanel() {
           ))}
         </div>
 
-        <div className="w-2/3 bg-black/60 border border-slate-800 rounded p-6 relative">
+        <div className="w-2/3 bg-black border border-slate-800 rounded p-6 relative">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
           <div className="flex items-center gap-2 mb-4">
             <AlertCircle className="w-4 h-4 text-amber-400 animate-pulse" />

@@ -300,7 +300,7 @@ export default function EngineerPanel({ authorizedIds, repairedIds, selectedDist
 
               return (
                 <motion.div key={id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.9 }}
-                  className={`bg-black/60 border rounded-lg p-5 flex items-center justify-between transition-all ${
+                  className={`bg-black border rounded-lg p-5 flex items-center justify-between transition-all ${
                   isDone ? "border-green-500/40" : "border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.1)]"
                 }`}>
                   <div className="flex items-center gap-4">
@@ -328,7 +328,7 @@ export default function EngineerPanel({ authorizedIds, repairedIds, selectedDist
         </AnimatePresence>
       </div>
 
-      <div className="mt-4 p-3 bg-black/40 border border-slate-800 rounded text-center">
+      <div className="mt-4 p-3 bg-black border border-slate-800 rounded text-center">
         <p className="text-slate-400 font-mono text-xs tracking-widest uppercase">
           Grid Stability: {repairedIds.length} / 3 Transformers Repaired
         </p>

@@ -113,7 +113,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
         {/* Left Sidebar: Role Identity + Transformer Status */}
         <div className="lg:w-72 flex-shrink-0 space-y-4">
           {/* Role Card */}
-          <div className="bg-black/80 border border-[#00ffff]/20 p-6 rounded-lg">
+          <div className="bg-black border border-[#00ffff]/20 p-6 rounded-lg">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-[#00ffff]/10 rounded border border-[#00ffff]/30">
                 <Cpu className="w-6 h-6 text-[#00ff9d]" />
@@ -132,7 +132,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
           </div>
 
           {/* Mission Status — depends on currentMission */}
-          <div className="bg-black/80 border border-[#00ffff]/20 p-6 rounded-lg">
+          <div className="bg-black border border-[#00ffff]/20 p-6 rounded-lg">
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="w-4 h-4 text-amber-400" />
               <h4 className="font-mono text-xs text-slate-400 uppercase tracking-widest">
@@ -207,7 +207,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
           </div>
 
           {/* Team Status */}
-          <div className="bg-black/80 border border-[#00ffff]/20 p-4 rounded-lg">
+          <div className="bg-black border border-[#00ffff]/20 p-4 rounded-lg">
             <h4 className="font-mono text-[10px] text-slate-500 uppercase tracking-widest mb-3">Team</h4>
             <div className="space-y-2">
               {Object.values(session.players).map((p) => (
@@ -221,7 +221,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
         </div>
 
         {/* Main Panel: Role-Specific Content */}
-        <div className="flex-grow bg-black/80 border border-[#00ffff]/20 p-8 rounded-lg shadow-2xl relative overflow-hidden">
+        <div className="flex-grow bg-black border border-[#00ffff]/20 p-8 rounded-lg shadow-2xl relative overflow-hidden">
           {session.currentMission === 1 && task1Complete ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}

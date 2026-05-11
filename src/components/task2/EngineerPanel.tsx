@@ -162,7 +162,7 @@ export default function EngineerPanel({
             </p>
           </div>
 
-          <div className="bg-black/60 p-4 border border-slate-800 rounded">
+          <div className="bg-black p-4 border border-slate-800 rounded">
             <div className={`text-center font-mono text-3xl tracking-[0.5em] h-12 flex items-center justify-center mb-6 border-b pb-4 ${error ? 'text-red-500 border-red-500/50' : 'text-cyan-400 border-cyan-500/30'}`}>
               {inputCode.padEnd(4, '_')}
             </div>
@@ -248,7 +248,7 @@ export default function EngineerPanel({
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-lg"
+              className="absolute inset-0 z-30 flex items-center justify-center bg-black backdrop-blur-sm rounded-lg"
             >
               <div className="text-center">
                 <Activity className="w-16 h-16 text-green-400 mx-auto mb-4" />
@@ -259,7 +259,7 @@ export default function EngineerPanel({
             </motion.div>
           )}
 
-          <div className="relative bg-black/50 p-6 border-2 border-slate-800 rounded-xl shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]">
+          <div className="relative bg-black p-6 border-2 border-slate-800 rounded-xl shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]">
             {/* IN/OUT Indicators */}
             <div className="absolute -left-6 top-[24px] md:top-[32px] flex items-center gap-1 z-20">
               <span className="text-[10px] font-black font-mono text-blue-400 uppercase tracking-widest bg-slate-900 px-1 border border-blue-500/30">IN</span>

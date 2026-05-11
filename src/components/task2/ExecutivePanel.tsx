@@ -62,7 +62,7 @@ export default function ExecutivePanel({
 
           {/* Analyst Request */}
           <div className={`p-4 border rounded relative overflow-hidden ${
-            analystUnlocked ? "border-green-500/50 bg-green-500/5" : "border-slate-800 bg-black/40"
+            analystUnlocked ? "border-green-500/50 bg-green-500/5" : "border-slate-800 bg-black"
           }`}>
             <div className="flex justify-between items-center relative z-10">
               <div>
@@ -88,7 +88,7 @@ export default function ExecutivePanel({
 
           {/* Engineer Pipe Access Request */}
           <div className={`p-4 border rounded relative overflow-hidden ${
-            engineerPipeAccessGranted ? "border-green-500/50 bg-green-500/5" : "border-slate-800 bg-black/40"
+            engineerPipeAccessGranted ? "border-green-500/50 bg-green-500/5" : "border-slate-800 bg-black"
           }`}>
             <div className="flex justify-between items-center relative z-10">
               <div>
@@ -131,7 +131,7 @@ export default function ExecutivePanel({
                 className={`w-full p-4 border rounded flex justify-between items-center transition-all ${
                   selectedSystem === sys.id
                     ? "border-fuchsia-500 bg-fuchsia-500/10"
-                    : "border-slate-800 bg-black/40 hover:border-slate-600"
+                    : "border-slate-800 bg-black hover:border-slate-600"
                 } ${executiveManualChoice && selectedSystem !== sys.id ? "opacity-30 cursor-not-allowed" : ""}`}
               >
                 <span className="font-mono text-sm">{sys.name}</span>

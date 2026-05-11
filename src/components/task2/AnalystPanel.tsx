@@ -59,7 +59,7 @@ export default function AnalystPanel({
           </div>
 
           <div className="flex-grow grid grid-cols-2 gap-6 font-mono text-sm">
-            <div className="bg-black/40 border border-slate-800 p-6 rounded">
+            <div className="bg-black border border-slate-800 p-6 rounded">
               <h3 className="text-green-400 mb-4 uppercase tracking-wider border-b border-slate-800 pb-2">
                 Emergency Codes
               </h3>
@@ -79,7 +79,7 @@ export default function AnalystPanel({
               </ul>
             </div>
 
-            <div className="bg-black/40 border border-slate-800 p-6 rounded">
+            <div className="bg-black border border-slate-800 p-6 rounded">
               <h3 className="text-green-400 mb-4 uppercase tracking-wider border-b border-slate-800 pb-2">
                 Routing Protocol
               </h3>

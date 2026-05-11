@@ -40,7 +40,7 @@ export default function ExecutivePanel({ authorizedIds, repairedIds, onAuthorize
       </p>
 
       {/* Input Section */}
-      <div className="bg-black/80 border border-fuchsia-500/20 rounded-lg p-6">
+      <div className="bg-black border border-fuchsia-500/20 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">
           <Terminal className="w-4 h-4 text-fuchsia-500" />
           <span className="font-mono text-xs text-fuchsia-500/70 uppercase tracking-widest">Override Command</span>
@@ -96,7 +96,7 @@ export default function ExecutivePanel({ authorizedIds, repairedIds, onAuthorize
 
               return (
                 <motion.div key={id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.9 }}
-                  className={`bg-black/60 border rounded-lg p-5 transition-all ${borderCls}`}>
+                  className={`bg-black border rounded-lg p-5 transition-all ${borderCls}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className={`p-2 rounded ${iconBg}`}>
@@ -127,11 +127,11 @@ export default function ExecutivePanel({ authorizedIds, repairedIds, onAuthorize
       </div>
 
       <div className="grid grid-cols-2 gap-3 mt-6">
-        <div className="bg-black/40 border border-slate-800 rounded p-3 text-center">
+        <div className="bg-black border border-slate-800 rounded p-3 text-center">
           <p className="text-fuchsia-400 font-mono text-2xl font-black">{authorizedIds.length}</p>
           <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Authorized</p>
         </div>
-        <div className="bg-black/40 border border-slate-800 rounded p-3 text-center">
+        <div className="bg-black border border-slate-800 rounded p-3 text-center">
           <p className="text-green-400 font-mono text-2xl font-black">{repairedIds.length}</p>
           <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Repaired</p>
         </div>

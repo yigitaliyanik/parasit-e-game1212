@@ -242,7 +242,7 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
           {/* Simple Player List */}
           <div className="flex flex-wrap gap-3">
             {players.map(p => (
-              <div key={p.id} className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded font-mono text-xs uppercase">
+              <div key={p.id} className="flex items-center gap-2 bg-black border border-slate-800 px-3 py-1.5 rounded font-mono text-xs uppercase">
                 <div className={clsx(
                   "w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]",
                   p.isReady ? "bg-emerald-500 text-emerald-500" : "bg-red-500 text-red-500"
@@ -252,7 +252,7 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
             ))}
             {/* Fill empty slots visually */}
             {Array.from({ length: Math.max(0, 4 - players.length) }).map((_, i) => (
-              <div key={`empty-${i}`} className="flex items-center gap-2 bg-slate-900/30 border border-slate-800/50 px-3 py-1.5 rounded font-mono text-xs uppercase opacity-50">
+              <div key={`empty-${i}`} className="flex items-center gap-2 bg-black/30 border border-slate-800/50 px-3 py-1.5 rounded font-mono text-xs uppercase opacity-50">
                 <div className="w-2 h-2 rounded-full bg-slate-700" />
                 <span className="text-slate-600">AWAITING...</span>
               </div>
@@ -309,8 +309,8 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
                   isSelected 
                     ? clsx(role.theme.bgSelected, role.theme.border, role.theme.shadowSelected, "scale-[1.02]")
                     : isTaken 
-                      ? "bg-slate-950/80 border-slate-900 opacity-50 cursor-not-allowed grayscale"
-                      : clsx("bg-slate-900/40 border-slate-800 shadow-[0_0_15px_rgba(0,0,0,0.5)]", role.theme.borderHover, role.theme.bgHover, role.theme.shadowIdle, role.theme.idleGlow)
+                      ? "bg-black border-slate-900 opacity-50 cursor-not-allowed grayscale"
+                      : clsx("bg-black border-slate-800 shadow-[0_0_15px_rgba(0,0,0,0.5)]", role.theme.borderHover, role.theme.bgHover, role.theme.shadowIdle, role.theme.idleGlow)
                 )}
               >
                 {/* Top: Role Name */}
@@ -337,7 +337,7 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
                 <div className="flex-grow flex items-center justify-center my-4">
                   <div className={clsx(
                     "p-6 rounded-full transition-all duration-500",
-                    isSelected ? role.theme.iconBgSelected : "bg-slate-800/30 group-hover:bg-slate-800/60"
+                    isSelected ? role.theme.iconBgSelected : "bg-neutral-900/30 group-hover:bg-neutral-900/60"
                   )}>
                     <role.icon className={clsx(
                       "w-16 h-16 transition-all duration-500",

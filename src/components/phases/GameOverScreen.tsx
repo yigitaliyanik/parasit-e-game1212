@@ -59,7 +59,7 @@ export default function GameOverScreen({ roomId }: GameOverScreenProps) {
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-6 mb-12">
-          <div className="bg-black/80 border border-red-500/20 rounded-lg p-6">
+          <div className="bg-black border border-red-500/20 rounded-lg p-6">
             <Clock className="w-6 h-6 text-red-400 mx-auto mb-3 opacity-60" />
             <p className="text-red-400 font-mono text-3xl font-black">
               {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
@@ -68,7 +68,7 @@ export default function GameOverScreen({ roomId }: GameOverScreenProps) {
               Time Elapsed
             </p>
           </div>
-          <div className="bg-black/80 border border-red-500/20 rounded-lg p-6">
+          <div className="bg-black border border-red-500/20 rounded-lg p-6">
             <Zap className="w-6 h-6 text-red-400 mx-auto mb-3 opacity-60" />
             <p className="text-red-400 font-mono text-3xl font-black">
               {repairedCount} / {ALL_DISTRICTS.length}
