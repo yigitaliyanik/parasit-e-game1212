@@ -2,18 +2,29 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Newspaper, Signal, AlertTriangle, Zap } from "lucide-react";
-import { TRANSFORMER_DATA } from "@/lib/types";
+import { ALL_DISTRICTS, DistrictData } from "@/lib/types";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function JournalistPanel() {
+interface JournalistPanelProps {
+  selectedDistrictIds: string[];
+}
+
+export default function JournalistPanel({ selectedDistrictIds }: JournalistPanelProps) {
   const [visibleClues, setVisibleClues] = useState<number[]>([]);
   const [typedTexts, setTypedTexts] = useState<Record<number, string>>({});
   const abortRef = useRef(false);
 
-  // Stable random source IDs — generated once, not on every render
+  // Resolve the 3 selected districts from the master list
+  const selectedDistricts: DistrictData[] = useMemo(() => {
+    return selectedDistrictIds
+      .map(id => ALL_DISTRICTS.find(d => d.id === id))
+      .filter((d): d is DistrictData => d !== undefined);
+  }, [selectedDistrictIds]);
+
+  // Stable random source IDs
   const sourceIds = useMemo(
-    () => TRANSFORMER_DATA.map(() => Math.floor(Math.random() * 900) + 100),
-    []
+    () => selectedDistricts.map(() => Math.floor(Math.random() * 900) + 100),
+    [selectedDistricts]
   );
 
   const typeClue = useCallback(async (index: number, text: string, abort: React.MutableRefObject<boolean>) => {
@@ -29,31 +40,35 @@ export default function JournalistPanel() {
   useEffect(() => {
     abortRef.current = false;
     const revealClues = async () => {
-      for (let i = 0; i < TRANSFORMER_DATA.length; i++) {
+      for (let i = 0; i < selectedDistricts.length; i++) {
         if (abortRef.current) return;
         await new Promise(r => setTimeout(r, i === 0 ? 500 : 2000));
         if (abortRef.current) return;
         setVisibleClues(prev => [...prev, i]);
-        await typeClue(i, TRANSFORMER_DATA[i].clue, abortRef);
+        await typeClue(i, selectedDistricts[i].clue, abortRef);
       }
     };
     revealClues();
     return () => {
       abortRef.current = true;
     };
-  }, [typeClue]);
+  }, [typeClue, selectedDistricts]);
 
-  const headlines = [
-    "POWER GRID UNDER SIEGE — PARASIT[E] OVERLOADS INFRASTRUCTURE",
-    "INDUSTRIAL DISTRICT SPARKS EVACUATION — TRANSFORMER CRISIS DEEPENS",
-    "SOUTHERN BORDER DECLARES EMERGENCY — UNDERGROUND SURGE DETECTED",
-  ];
+  const dates = useMemo(() => [
+    "VOL. XLVII \u2022 NO. 2891",
+    "VOL. XLVII \u2022 NO. 2892",
+    "VOL. XLVII \u2022 NO. 2893",
+  ], []);
 
-  const dates = [
-    "VOL. XLVII • NO. 2891",
-    "VOL. XLVII • NO. 2892",
-    "VOL. XLVII • NO. 2893",
-  ];
+  if (selectedDistricts.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-slate-500 font-mono text-sm animate-pulse uppercase tracking-widest">
+          Awaiting mission parameters...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -77,7 +92,7 @@ export default function JournalistPanel() {
       {/* Newspaper Clippings */}
       <div className="space-y-6 overflow-y-auto pr-2 pb-8">
         <AnimatePresence>
-          {TRANSFORMER_DATA.map((t, i) => (
+          {selectedDistricts.map((t, i) => (
             <motion.div
               key={t.id}
               initial={{ opacity: 0, y: 30, rotateZ: -1 }}
@@ -99,16 +114,14 @@ export default function JournalistPanel() {
                     backgroundSize: "150px 150px",
                   }}
                 />
-
-                {/* Grunge border effect */}
+                {/* Grunge border */}
                 <div className="absolute inset-0 border-2 border-amber-900/20 rounded-lg pointer-events-none" />
-                {/* Neon accent lines — cyberpunk enhancement */}
+                {/* Neon accent lines */}
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-600/30 to-transparent" />
                 <div className="absolute top-0 left-0 w-[1px] h-full bg-gradient-to-b from-cyan-500/20 via-transparent to-amber-500/20" />
                 <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-amber-500/20 via-transparent to-cyan-500/20" />
 
-                {/* Newspaper content */}
                 <div className="bg-[#0d0a05] relative z-10 p-0">
                   {/* Masthead */}
                   <div className="bg-gradient-to-r from-amber-900/30 via-amber-800/40 to-amber-900/30 px-5 py-3 border-b border-amber-800/30">
@@ -137,7 +150,7 @@ export default function JournalistPanel() {
                     </div>
                   </div>
 
-                  {/* Decorative line */}
+                  {/* Breaking line */}
                   <div className="flex items-center gap-2 px-5 py-2 border-b border-amber-900/20">
                     <div className="flex-grow h-[1px] bg-amber-800/30" />
                     <AlertTriangle className="w-3 h-3 text-red-500/60" />
@@ -155,21 +168,18 @@ export default function JournalistPanel() {
                         textShadow: "0 0 20px rgba(245,158,11,0.15), 0 0 40px rgba(6,182,212,0.05)",
                       }}
                     >
-                      {headlines[i]}
+                      {t.headline}
                     </h2>
                   </div>
 
-                  {/* Rule line — neon accent */}
+                  {/* Rule line */}
                   <div className="mx-5 h-[2px] bg-gradient-to-r from-amber-700/40 via-cyan-500/15 to-transparent mb-3" />
 
                   {/* Article body */}
                   <div className="px-5 pb-5">
                     <div
                       className="text-sm text-amber-100/70 leading-relaxed whitespace-pre-wrap"
-                      style={{
-                        fontFamily: "var(--font-headline), Georgia, 'Times New Roman', serif",
-                        columnCount: 1,
-                      }}
+                      style={{ fontFamily: "var(--font-headline), Georgia, 'Times New Roman', serif" }}
                     >
                       {typedTexts[i] || ""}
                       {visibleClues.includes(i) && (!typedTexts[i] || typedTexts[i].length < t.clue.length) && (
@@ -177,7 +187,6 @@ export default function JournalistPanel() {
                       )}
                     </div>
 
-                    {/* Footer tagline */}
                     {typedTexts[i]?.length === t.clue.length && (
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -190,9 +199,7 @@ export default function JournalistPanel() {
                         </span>
                         <span className="flex items-center gap-1.5">
                           <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
-                          <span className="font-mono text-[9px] text-cyan-500/60 uppercase tracking-widest">
-                            Verified
-                          </span>
+                          <span className="font-mono text-[9px] text-cyan-500/60 uppercase tracking-widest">Verified</span>
                         </span>
                       </motion.div>
                     )}
@@ -204,16 +211,17 @@ export default function JournalistPanel() {
         </AnimatePresence>
       </div>
 
-      {visibleClues.length === 3 && typedTexts[2]?.length === TRANSFORMER_DATA[2].clue.length && (
+      {visibleClues.length === selectedDistricts.length &&
+        selectedDistricts.length > 0 &&
+        typedTexts[selectedDistricts.length - 1]?.length === selectedDistricts[selectedDistricts.length - 1].clue.length && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded text-center relative overflow-hidden"
         >
-          {/* Neon scan accent */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/5 to-transparent pointer-events-none" />
           <p className="text-amber-400 font-mono text-sm tracking-widest uppercase animate-pulse relative z-10">
-            All reports received — relay district names to Data Analyst
+            All reports received &mdash; relay district names to Data Analyst
           </p>
         </motion.div>
       )}

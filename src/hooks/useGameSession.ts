@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ref, onValue, set, update, get, increment, onDisconnect } from 'firebase/database';
 import { db, signInAnonymousUser } from '@/lib/firebase';
-import { GameSession, Player, Role, GameStatus, TRANSFORMER_DATA } from '@/lib/types';
+import { GameSession, Player, Role, GameStatus, ALL_DISTRICTS } from '@/lib/types';
 
 export const useGameSession = (roomId: string) => {
   const [session, setSession] = useState<GameSession | null>(null);
@@ -249,12 +249,18 @@ export const useGameSession = (roomId: string) => {
   const startPlaying = async () => {
     if (!session) return;
     try {
+      // Randomly pick 3 of 8 districts for this session
+      const shuffled = [...ALL_DISTRICTS].sort(() => Math.random() - 0.5);
+      const selectedIds = shuffled.slice(0, 3).map(d => d.id);
+
       await update(ref(db, `sessions/${roomId}`), {
         gameStatus: "playing",
+        currentMission: 1,
         task1: {
           analystFoundIds: [],
           executiveAuthorized: [],
           engineerRepaired: [],
+          selectedDistrictIds: selectedIds,
           wrongAttempts: 0,
         },
       });
@@ -268,7 +274,8 @@ export const useGameSession = (roomId: string) => {
   const submitAnalystId = async (id: string): Promise<boolean> => {
     if (!session) return false;
     try {
-      const validIds: string[] = TRANSFORMER_DATA.map(t => t.id);
+      // Validate against the 3 randomly selected districts for this session
+      const validIds = session.task1?.selectedDistrictIds || [];
       const alreadyFound = session.task1?.analystFoundIds || [];
 
       if (validIds.includes(id) && !alreadyFound.includes(id)) {
@@ -340,6 +347,65 @@ export const useGameSession = (roomId: string) => {
     }
   };
 
+  // ─── NEW: Task 2 Methods ───────────────────────────────────────────
+
+  const setMission2Ready = async (ready: boolean) => {
+    if (!currentUser || !session) return;
+    await update(ref(db, `sessions/${roomId}/mission2Ready`), {
+      [currentUser.id]: ready
+    });
+  };
+
+  const startMission2 = async () => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}`), {
+      currentMission: 2,
+      task2: {
+        analystUnlockRequested: false,
+        analystUnlocked: false,
+        engineerCodeEntered: false,
+        pipeAccessRequested: false,
+        executiveGrantedPipeAccess: false,
+        puzzleSolved: false,
+      }
+    });
+  };
+
+  const requestAnalystUnlock = async () => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task2`), { analystUnlockRequested: true });
+  };
+
+  const completeAnalystUnlock = async () => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task2`), { analystUnlocked: true });
+  };
+
+  const submitExecutiveManualChoice = async (choice: string) => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task2`), { executiveManualChoice: choice });
+  };
+
+  const submitEngineerCodeTask2 = async () => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task2`), { engineerCodeEntered: true });
+  };
+
+  const requestPipeAccess = async () => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task2`), { pipeAccessRequested: true });
+  };
+
+  const grantPipeAccess = async (granted: boolean) => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task2`), { executiveGrantedPipeAccess: granted });
+  };
+
+  const completeTask2Puzzle = async () => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task2`), { puzzleSolved: true });
+  };
+
   // ─── Derived State ─────────────────────────────────────────────────
 
   const currentPlayer = session?.players && currentUser ? session.players[currentUser.id] : null;
@@ -378,6 +444,17 @@ export const useGameSession = (roomId: string) => {
     authorizeRepair,
     removeAuthorization,
     completeRepair,
+
+    // Task 2
+    setMission2Ready,
+    startMission2,
+    requestAnalystUnlock,
+    completeAnalystUnlock,
+    submitExecutiveManualChoice,
+    submitEngineerCodeTask2,
+    requestPipeAccess,
+    grantPipeAccess,
+    completeTask2Puzzle,
 
     // Legacy helpers
     setMission1Ready: async (ready: boolean) => {

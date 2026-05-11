@@ -3,11 +3,12 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, CheckCircle2, Lock, ShieldAlert } from "lucide-react";
-import { TRANSFORMER_DATA } from "@/lib/types";
+import { ALL_DISTRICTS } from "@/lib/types";
 
 interface EngineerPanelProps {
   authorizedIds: string[];
   repairedIds: string[];
+  selectedDistrictIds: string[];
   onCompleteRepair: (id: string) => void;
   onRemoveAuthorization: (id: string) => void;
 }
@@ -26,7 +27,7 @@ interface WirePuzzle {
   connections: Record<number, number>;
 }
 
-export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRepair, onRemoveAuthorization }: EngineerPanelProps) {
+export default function EngineerPanel({ authorizedIds, repairedIds, selectedDistrictIds, onCompleteRepair, onRemoveAuthorization }: EngineerPanelProps) {
   const [puzzle, setPuzzle] = useState<WirePuzzle | null>(null);
   const [selectedLeft, setSelectedLeft] = useState<number | null>(null);
   const [wrongFlash, setWrongFlash] = useState(false);
@@ -34,7 +35,7 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
   const containerRef = useRef<HTMLDivElement>(null);
 
   const startPuzzle = useCallback((id: string) => {
-    const isValid = TRANSFORMER_DATA.some(t => t.id === id);
+    const isValid = selectedDistrictIds.includes(id);
     
     if (isValid) {
       const order = [0, 1, 2, 3];
@@ -109,7 +110,7 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
 
   // ── Puzzle View ──
   if (puzzle) {
-    const tData = TRANSFORMER_DATA.find(t => t.id === puzzle.transformerId);
+    const tData = ALL_DISTRICTS.find(t => t.id === puzzle.transformerId);
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -291,7 +292,7 @@ export default function EngineerPanel({ authorizedIds, repairedIds, onCompleteRe
           ) : (
             authorizedIds.map((id) => {
               const isDone = repairedIds.includes(id);
-              const validTransformer = TRANSFORMER_DATA.find(t => t.id === id);
+              const validTransformer = ALL_DISTRICTS.find(t => t.id === id);
 
               return (
                 <motion.div key={id} layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.9 }}
