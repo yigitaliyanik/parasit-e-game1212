@@ -11,6 +11,10 @@ import Task2JournalistPanel from "@/components/task2/JournalistPanel";
 import Task2AnalystPanel from "@/components/task2/AnalystPanel";
 import Task2ExecutivePanel from "@/components/task2/ExecutivePanel";
 import Task2EngineerPanel from "@/components/task2/EngineerPanel";
+import Task3JournalistPanel from "@/components/task3/JournalistPanel";
+import Task3AnalystPanel from "@/components/task3/AnalystPanel";
+import Task3ExecutivePanel from "@/components/task3/ExecutivePanel";
+import Task3EngineerPanel from "@/components/task3/EngineerPanel";
 import { Cpu, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
@@ -39,6 +43,12 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
     requestPipeAccess,
     grantPipeAccess,
     completeTask2Puzzle,
+    setMission3Ready,
+    startMission3,
+    setTask3ExecutiveAccess,
+    setTask3EngineerLogged,
+    setTask3PowerRestored,
+    setTask3Completed,
   } = useGameSession(roomId);
 
   const [task1Complete, setTask1Complete] = useState(false);
@@ -46,6 +56,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
   const role = currentPlayer?.role as Role;
   const task1 = session?.task1;
   const task2 = session?.task2;
+  const task3 = session?.task3;
   const foundIds = task1?.analystFoundIds || [];
   const authorizedIds = task1?.executiveAuthorized || [];
   const repairedIds = task1?.engineerRepaired || [];
@@ -76,6 +87,18 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
       }
     }
   }, [session, task1Complete, currentPlayer, startMission2]);
+
+  // Handle all players ready for Mission 3
+  useEffect(() => {
+    if (session?.currentMission === 2 && task2?.puzzleSolved) {
+      const allReady = Object.values(session.players || {}).every(
+        (p) => session.mission3Ready?.[p.id]
+      );
+      if (allReady && currentPlayer?.isHost) {
+        startMission3();
+      }
+    }
+  }, [session, task2?.puzzleSolved, currentPlayer, startMission3]);
 
   if (!session || !currentPlayer || !currentUser) return null;
 
@@ -136,12 +159,27 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="w-4 h-4 text-amber-400" />
               <h4 className="font-mono text-xs text-slate-400 uppercase tracking-widest">
-                {session.currentMission === 2 ? "Mission 02: Water Treatment" : "Mission 01: Power Grid"}
+                {session.currentMission === 3 ? "Mission 03: Central Hospital" : session.currentMission === 2 ? "Mission 02: Water Treatment" : "Mission 01: Power Grid"}
               </h4>
             </div>
 
             <div className="space-y-3">
-              {session.currentMission === 2 ? (
+              {session.currentMission === 3 ? (
+                <div className="space-y-2">
+                  <div className={`flex items-center gap-3 p-2 rounded border transition-all ${task3?.executiveAccessGranted ? "border-green-500/30 bg-green-500/5" : "border-slate-800 bg-black/20"}`}>
+                    <div className={`w-2 h-2 rounded-full ${task3?.executiveAccessGranted ? "bg-green-500 shadow-[0_0_8px_#22c55e]" : "bg-slate-700"}`} />
+                    <span className="font-mono text-[10px] text-slate-400">Security Firewall</span>
+                  </div>
+                  <div className={`flex items-center gap-3 p-2 rounded border transition-all ${task3?.engineerLogged ? "border-cyan-500/30 bg-cyan-500/5" : "border-slate-800 bg-black/20"}`}>
+                    <div className={`w-2 h-2 rounded-full ${task3?.engineerLogged ? "bg-cyan-500 shadow-[0_0_8px_#22d3ee]" : "bg-slate-700"}`} />
+                    <span className="font-mono text-[10px] text-slate-400">Mainframe Override</span>
+                  </div>
+                  <div className={`flex items-center gap-3 p-2 rounded border transition-all ${task3?.powerRestored ? "border-amber-500/30 bg-amber-500/5" : "border-slate-800 bg-black/20"}`}>
+                    <div className={`w-2 h-2 rounded-full ${task3?.powerRestored ? "bg-amber-500 shadow-[0_0_8px_#f59e0b]" : "bg-slate-700"}`} />
+                    <span className="font-mono text-[10px] text-slate-400">Power Rerouted</span>
+                  </div>
+                </div>
+              ) : session.currentMission === 2 ? (
                 <div className="space-y-2">
                   <div className={`flex items-center gap-3 p-2 rounded border transition-all ${task2?.analystUnlocked ? "border-green-500/30 bg-green-500/5" : "border-slate-800 bg-black/20"}`}>
                     <div className={`w-2 h-2 rounded-full ${task2?.analystUnlocked ? "bg-green-500 shadow-[0_0_8px_#22c55e]" : "bg-slate-700"}`} />
@@ -267,12 +305,62 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
                 Parasit[e] infection localized.
               </p>
               <button
+                onClick={() => setMission3Ready(!session.mission3Ready?.[currentPlayer.id])}
+                className={`mt-8 px-8 py-4 font-mono uppercase tracking-widest transition-all border ${
+                  session.mission3Ready?.[currentPlayer.id]
+                    ? "bg-cyan-500/20 text-cyan-400 border-cyan-500 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+                    : "bg-black text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
+              >
+                {session.mission3Ready?.[currentPlayer.id] ? "Standing By..." : "Ready for Next Directive"}
+              </button>
+            </motion.div>
+          ) : session.currentMission === 3 && task3?.completed ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="h-full flex flex-col items-center justify-center text-center"
+            >
+              <CheckCircle2 className="w-20 h-20 text-fuchsia-400 mb-6" />
+              <h2 className="text-3xl font-black text-fuchsia-400 uppercase tracking-[0.3em] mb-4">
+                Hospital Secured
+              </h2>
+              <p className="text-slate-400 font-mono text-sm max-w-md">
+                Central Hospital power grid has been successfully rerouted.
+                Critical patients are stable. Parasit[e] has been expelled from this sector.
+              </p>
+              <button
                 onClick={setGameOver}
                 className="mt-8 px-6 py-3 border border-green-500 text-green-500 hover:bg-green-500/10 font-mono text-sm tracking-widest uppercase transition-colors"
               >
                 Extract Team
               </button>
             </motion.div>
+          ) : session.currentMission === 3 ? (
+            <>
+              {role === "journalist" && <Task3JournalistPanel />}
+              {role === "analyst" && (
+                <Task3AnalystPanel
+                  executiveAccessGranted={task3?.executiveAccessGranted || false}
+                />
+              )}
+              {role === "executive" && (
+                <Task3ExecutivePanel
+                  executiveAccessGranted={task3?.executiveAccessGranted || false}
+                  powerRestored={task3?.powerRestored || false}
+                  onGrantAccess={() => setTask3ExecutiveAccess(true)}
+                  onComplete={() => setTask3Completed(true)}
+                />
+              )}
+              {role === "engineer" && (
+                <Task3EngineerPanel
+                  engineerLogged={task3?.engineerLogged || false}
+                  powerRestored={task3?.powerRestored || false}
+                  onLogin={() => setTask3EngineerLogged(true)}
+                  onPowerRestored={() => setTask3PowerRestored(true)}
+                />
+              )}
+            </>
           ) : session.currentMission === 2 ? (
             <>
               {role === "journalist" && <Task2JournalistPanel />}

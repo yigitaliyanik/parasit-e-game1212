@@ -27,6 +27,13 @@ export interface Task2State {
   puzzleSolved: boolean;
 }
 
+export interface Task3State {
+  executiveAccessGranted: boolean;
+  engineerLogged: boolean;
+  powerRestored: boolean;
+  completed: boolean;
+}
+
 export interface GameSession {
   roomId: string;
   gameStatus: GameStatus;
@@ -47,9 +54,13 @@ export interface GameSession {
   task1?: Task1State;
   
   // Mission 2
-  currentMission?: number; // 1 or 2
+  currentMission?: number; // 1, 2, or 3
   mission2Ready?: Record<string, boolean>; // Ready check between missions
   task2?: Task2State;
+
+  // Mission 3
+  mission3Ready?: Record<string, boolean>; // Ready check before Mission 3
+  task3?: Task3State;
 
   // Legacy fields
   selectedLocations?: string[];

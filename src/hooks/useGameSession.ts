@@ -408,6 +408,48 @@ export const useGameSession = (roomId: string) => {
     await update(ref(db, `sessions/${roomId}/task2`), { puzzleSolved: true });
   };
 
+  // ─── NEW: Task 3 Methods ───────────────────────────────────────────
+
+  const setMission3Ready = async (ready: boolean) => {
+    if (!currentUser || !session) return;
+    await update(ref(db, `sessions/${roomId}/mission3Ready`), {
+      [currentUser.id]: ready
+    });
+  };
+
+  const startMission3 = async () => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}`), {
+      currentMission: 3,
+      task3: {
+        executiveAccessGranted: false,
+        engineerLogged: false,
+        powerRestored: false,
+        completed: false,
+      }
+    });
+  };
+
+  const setTask3ExecutiveAccess = async (granted: boolean) => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task3`), { executiveAccessGranted: granted });
+  };
+
+  const setTask3EngineerLogged = async (logged: boolean) => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task3`), { engineerLogged: logged });
+  };
+
+  const setTask3PowerRestored = async (restored: boolean) => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task3`), { powerRestored: restored });
+  };
+
+  const setTask3Completed = async (completed: boolean) => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task3`), { completed: completed });
+  };
+
   // ─── Derived State ─────────────────────────────────────────────────
 
   const currentPlayer = session?.players && currentUser ? session.players[currentUser.id] : null;
@@ -457,6 +499,14 @@ export const useGameSession = (roomId: string) => {
     requestPipeAccess,
     grantPipeAccess,
     completeTask2Puzzle,
+
+    // Task 3
+    setMission3Ready,
+    startMission3,
+    setTask3ExecutiveAccess,
+    setTask3EngineerLogged,
+    setTask3PowerRestored,
+    setTask3Completed,
 
     // Legacy helpers
     setMission1Ready: async (ready: boolean) => {
