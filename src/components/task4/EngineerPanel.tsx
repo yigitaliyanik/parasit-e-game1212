@@ -1,97 +1,73 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Wrench, ShieldAlert, CheckCircle2, AlertTriangle, Lock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Wrench, ShieldAlert, CheckCircle2, Lock } from "lucide-react";
 
 interface Task4EngineerPanelProps {
   routeChanged: boolean;
+  wagonsDetached: boolean;
   onComplete: () => void;
 }
 
-export default function Task4EngineerPanel({ routeChanged, onComplete }: Task4EngineerPanelProps) {
-  const [phase, setPhase] = useState<"ACQUISITION" | "REFLEX" | "DONE">("ACQUISITION");
-  const [wagonIds, setWagonIds] = useState("");
-  const [wagonError, setWagonError] = useState(false);
+export default function Task4EngineerPanel({ routeChanged, wagonsDetached, onComplete }: Task4EngineerPanelProps) {
+  const [wagon1, setWagon1] = useState("");
+  const [wagon2, setWagon2] = useState("");
+  const [wagon3, setWagon3] = useState("");
+  const [error, setError] = useState(false);
+  
+  const [stage, setStage] = useState<'input' | 'reflex'>('input');
   const [successCount, setSuccessCount] = useState(0);
-  
-  // Reflex Game State
-  const [sliderPos, setSliderPos] = useState(0);
+  const [markerPos, setMarkerPos] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [gameMsg, setGameMsg] = useState("");
-  const requestRef = useRef<number>(0);
-  const isPlayingRef = useRef<boolean>(true);
-  
-  // The Safe Zone is roughly from 40% to 60%
-  const SAFE_ZONE_START = 40;
-  const SAFE_ZONE_END = 60;
-  
-  // Speed
-  const SPEED = 2; // % per frame roughly
+  const [reflexError, setReflexError] = useState(false);
 
-  const handleIdSubmit = (e: React.FormEvent) => {
+  const ZONE_START = 40;
+  const ZONE_END = 60;
+
+  useEffect(() => {
+    if (stage === 'reflex' && !wagonsDetached) {
+      const interval = setInterval(() => {
+        setMarkerPos((prev) => {
+          let next = prev + direction * 2;
+          if (next >= 100) {
+            setDirection(-1);
+            return 100;
+          }
+          if (next <= 0) {
+            setDirection(1);
+            return 0;
+          }
+          return next;
+        });
+      }, 20);
+
+      return () => clearInterval(interval);
+    }
+  }, [stage, direction, wagonsDetached]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanIds = wagonIds.replace(/\s+/g, "");
-    if (cleanIds === "04,08,15" || cleanIds === "04,15,08" || cleanIds === "08,04,15" || cleanIds === "08,15,04" || cleanIds === "15,04,08" || cleanIds === "15,08,04") {
-      setPhase("REFLEX");
-      setWagonError(false);
+    const inputs = [wagon1.trim(), wagon2.trim(), wagon3.trim()].sort();
+    const correct = ["04", "08", "15"].sort();
+
+    if (JSON.stringify(inputs) === JSON.stringify(correct)) {
+      setError(false);
+      setStage('reflex');
     } else {
-      setWagonError(true);
+      setError(true);
     }
   };
 
-  useEffect(() => {
-    if (phase !== "REFLEX" || !isPlayingRef.current) return;
-
-    const animate = () => {
-      setSliderPos((prev) => {
-        let nextPos = prev + direction * SPEED;
-        if (nextPos >= 100) {
-          nextPos = 100;
-          setDirection(-1);
-        } else if (nextPos <= 0) {
-          nextPos = 0;
-          setDirection(1);
-        }
-        return nextPos;
-      });
-      requestRef.current = requestAnimationFrame(animate);
-    };
-
-    requestRef.current = requestAnimationFrame(animate);
-
-    return () => cancelAnimationFrame(requestRef.current);
-  }, [phase, direction]);
-
   const handleDecouple = () => {
-    if (!isPlayingRef.current) return;
-    
-    // Check if within safe zone
-    if (sliderPos >= SAFE_ZONE_START && sliderPos <= SAFE_ZONE_END) {
-      setGameMsg("HIT! WAGON SECURED.");
+    if (markerPos >= ZONE_START && markerPos <= ZONE_END) {
+      setReflexError(false);
       const newCount = successCount + 1;
       setSuccessCount(newCount);
-      
       if (newCount >= 3) {
-        isPlayingRef.current = false;
-        setPhase("DONE");
         onComplete();
-      } else {
-        // Pause briefly before continuing
-        isPlayingRef.current = false;
-        setTimeout(() => {
-          setGameMsg("");
-          isPlayingRef.current = true;
-          setDirection(Math.random() > 0.5 ? 1 : -1);
-        }, 1000);
       }
     } else {
-      setGameMsg("MISSED! RECALCULATING...");
-      isPlayingRef.current = false;
-      setTimeout(() => {
-        setGameMsg("");
-        isPlayingRef.current = true;
-      }, 1000);
+      setReflexError(true);
     }
   };
 
@@ -103,13 +79,13 @@ export default function Task4EngineerPanel({ routeChanged, onComplete }: Task4En
           Awaiting Reroute
         </h2>
         <p className="font-mono text-cyan-100/50 mb-6 max-w-md">
-          WAITING FOR ROUTE DIVERSION. System locked by Executive override.
+          WAITING FOR ROUTE CHANGE.
         </p>
       </div>
     );
   }
 
-  if (phase === "DONE") {
+  if (wagonsDetached) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-black/50">
         <CheckCircle2 className="w-20 h-20 text-cyan-400 mb-6" />
@@ -117,7 +93,7 @@ export default function Task4EngineerPanel({ routeChanged, onComplete }: Task4En
           Wagons Detached
         </h2>
         <p className="font-mono text-cyan-100/80 mb-6 max-w-md">
-          All toxic wagons have been successfully separated. Threat neutralized.
+          Toxic wagons detached! Threat neutralized!
         </p>
       </div>
     );
@@ -139,7 +115,7 @@ export default function Task4EngineerPanel({ routeChanged, onComplete }: Task4En
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-8 pr-4 custom-scrollbar">
-        {phase === "ACQUISITION" && (
+        {stage === 'input' && (
           <div className="bg-black/40 border border-cyan-500/30 p-6 rounded-lg">
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyan-500/20">
               <ShieldAlert className="w-5 h-5 text-amber-500" />
@@ -149,27 +125,43 @@ export default function Task4EngineerPanel({ routeChanged, onComplete }: Task4En
             </div>
             
             <p className="font-mono text-sm text-cyan-100/80 mb-4 uppercase tracking-widest">
-              Input Toxic Wagon IDs to Decouple (Comma separated):
+              Enter Toxic Wagon Numbers:
             </p>
 
-            <form onSubmit={handleIdSubmit} className="flex gap-4">
-              <input
-                type="text"
-                value={wagonIds}
-                onChange={(e) => setWagonIds(e.target.value)}
-                placeholder="e.g. 01,02,03"
-                className="flex-1 bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400"
-              />
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  value={wagon1}
+                  onChange={(e) => setWagon1(e.target.value)}
+                  placeholder="ID 1"
+                  className="flex-1 bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400"
+                />
+                <input
+                  type="text"
+                  value={wagon2}
+                  onChange={(e) => setWagon2(e.target.value)}
+                  placeholder="ID 2"
+                  className="flex-1 bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400"
+                />
+                <input
+                  type="text"
+                  value={wagon3}
+                  onChange={(e) => setWagon3(e.target.value)}
+                  placeholder="ID 3"
+                  className="flex-1 bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400"
+                />
+              </div>
               <button
                 type="submit"
-                className="bg-cyan-500/10 border border-cyan-500 text-cyan-500 px-6 py-3 rounded font-mono uppercase tracking-widest hover:bg-cyan-500/20 transition-colors"
+                className="bg-cyan-500/10 border border-cyan-500 text-cyan-500 px-6 py-4 mt-2 rounded font-mono uppercase tracking-widest font-bold hover:bg-cyan-500/20 transition-colors"
               >
-                Lock On
+                Confirm Targets
               </button>
             </form>
-            {wagonError && (
+            {error && (
               <p className="font-mono text-sm text-red-500 mt-3 animate-pulse font-bold">
-                ERROR: INVALID WAGON IDS.
+                ERROR: INVALID WAGON IDS DETECTED.
               </p>
             )}
             
@@ -178,66 +170,61 @@ export default function Task4EngineerPanel({ routeChanged, onComplete }: Task4En
                 Directive:
               </p>
               <p className="opacity-80 mt-1">
-                Obtain target wagon IDs from the JOURNALIST to proceed with manual decoupling.
+                Ask the Journalist for the wagon IDs.
               </p>
             </div>
           </div>
         )}
 
-        {phase === "REFLEX" && (
+        {stage === 'reflex' && (
           <div className="bg-black/40 border border-cyan-500/30 p-6 rounded-lg text-center">
-            <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b border-cyan-500/20">
-              <AlertTriangle className="w-5 h-5 text-amber-500 animate-pulse" />
-              <h3 className="font-mono text-cyan-400 uppercase tracking-widest font-bold">
-                Precision Decouple Sequence
-              </h3>
-            </div>
+            <h3 className="font-mono text-cyan-400 uppercase tracking-widest font-bold mb-6">
+              Decoupling Sequence Initiated
+            </h3>
+            
+            <p className="font-mono text-sm text-cyan-100/80 mb-8 uppercase tracking-widest">
+              Click DECOUPLE when marker is in GREEN zone.<br/>
+              Successes needed: {3 - successCount}
+            </p>
 
-            <div className="flex justify-between font-mono text-cyan-100/80 mb-4 uppercase tracking-widest text-sm">
-              <span>Wagons Secured: {successCount} / 3</span>
-              <span>Speed: HIGH</span>
-            </div>
-
-            {/* Slider Track */}
-            <div className="relative w-full h-12 bg-black border-2 border-slate-700 rounded-full overflow-hidden mb-8">
-              {/* Safe Zone Indicator */}
+            <div className="relative h-12 bg-slate-800 rounded-full mb-8 overflow-hidden border border-cyan-900">
+              {/* Target Zone */}
               <div 
-                className="absolute top-0 bottom-0 bg-green-500/30 border-x-2 border-green-500"
-                style={{ 
-                  left: `${SAFE_ZONE_START}%`, 
-                  width: `${SAFE_ZONE_END - SAFE_ZONE_START}%` 
-                }}
+                className="absolute h-full bg-green-500/40 border-x-2 border-green-400"
+                style={{ left: `${ZONE_START}%`, width: `${ZONE_END - ZONE_START}%` }}
               />
               
               {/* Moving Marker */}
               <div 
-                className="absolute top-0 bottom-0 w-4 bg-cyan-400 shadow-[0_0_10px_#22d3ee] rounded-full transform -translate-x-1/2"
-                style={{ left: `${sliderPos}%` }}
+                className="absolute top-0 bottom-0 w-2 bg-white shadow-[0_0_10px_#fff]"
+                style={{ left: `${markerPos}%`, transform: 'translateX(-50%)' }}
               />
             </div>
 
             <button
               onClick={handleDecouple}
-              className="w-full bg-cyan-500/10 border-2 border-cyan-500 text-cyan-400 px-6 py-6 rounded font-mono text-xl uppercase tracking-[0.2em] font-black hover:bg-cyan-500/20 hover:shadow-[0_0_20px_#22d3ee] transition-all active:scale-95"
+              className="w-full bg-cyan-500/20 border-2 border-cyan-400 text-cyan-300 font-bold font-mono text-xl py-6 rounded hover:bg-cyan-500/40 active:bg-cyan-400 active:text-black transition-all"
             >
               DECOUPLE
             </button>
 
-            {/* Game Message */}
-            <div className="h-8 mt-6">
-              {gameMsg && (
-                <p className={`font-mono font-bold uppercase tracking-widest ${
-                  gameMsg.includes("HIT") ? "text-green-400" : "text-red-500 animate-pulse"
-                }`}>
-                  {gameMsg}
-                </p>
-              )}
-            </div>
-            
-            <div className="mt-4 p-4 bg-amber-950/20 border-l-4 border-amber-500 text-sm font-mono text-amber-200 text-left">
-              <p className="opacity-80 mt-1">
-                WARNING: Magnetic coupling unstable. Hit DECOUPLE exactly when marker enters the green safe zone.
+            {reflexError && (
+              <p className="font-mono text-sm text-red-500 mt-4 animate-pulse font-bold">
+                MISS! Timing off. Try again.
               </p>
+            )}
+            
+            <div className="mt-8 flex justify-center gap-4">
+              {[0, 1, 2].map((i) => (
+                <div 
+                  key={i} 
+                  className={`w-6 h-6 rounded-full border-2 ${
+                    i < successCount 
+                      ? 'bg-green-500 border-green-400 shadow-[0_0_10px_#22c55e]' 
+                      : 'bg-transparent border-slate-600'
+                  }`} 
+                />
+              ))}
             </div>
           </div>
         )}

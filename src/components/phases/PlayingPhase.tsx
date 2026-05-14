@@ -123,6 +123,15 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
     }
   }, [session, task3?.completed, currentPlayer, startMission4]);
 
+  // Handle Mission 4 Victory Condition
+  useEffect(() => {
+    if (session?.currentMission === 4 && task4?.routeChanged && task4?.wagonsDetached && !task4?.completed) {
+      if (currentPlayer?.isHost) {
+        setTask4Completed(true);
+      }
+    }
+  }, [session?.currentMission, task4?.routeChanged, task4?.wagonsDetached, task4?.completed, currentPlayer?.isHost, setTask4Completed]);
+
   if (!session || !currentPlayer || !currentUser) return null;
 
   const roleColors: Record<Role, string> = {
@@ -142,41 +151,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
   const victoryText = "The Parasit[e] has been permanently erased from the mainframe. The city's water is clean, the grid is stable, and the toxic express has been safely dismantled. You have saved the city.";
   const { displayedText: typedVictory } = useTypewriter(victoryText, 40);
 
-  if (session.currentMission === 4 && task4?.completed) {
-    return (
-      <div className="min-h-screen bg-black text-slate-200 flex flex-col items-center justify-center relative overflow-hidden p-6">
-        {/* Victory Blue Matrix Rain (simulated via CSS or static for now, you can add a real canvas effect if you have one) */}
-        <div className="absolute inset-0 bg-blue-900/10" />
-        <div className="scanline" />
-        <div className="noise-bg" />
-        
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5 }}
-          className="relative z-10 text-center max-w-3xl"
-        >
-          <ShieldCheck className="w-24 h-24 text-blue-500 mx-auto mb-8 animate-pulse" />
-          <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 uppercase tracking-[0.2em] mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]">
-            System Purged<br />Threat Neutralized
-          </h1>
-          <p className="font-mono text-xl md:text-2xl text-blue-100/90 leading-relaxed min-h-[120px]">
-            {typedVictory}
-          </p>
-          
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 4 }}
-            onClick={() => window.location.href = '/'}
-            className="mt-12 px-8 py-4 border-2 border-blue-500 text-blue-400 font-mono uppercase tracking-widest hover:bg-blue-500/20 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all"
-          >
-            Return to Lobby / Disconnect
-          </motion.button>
-        </motion.div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-black text-slate-200 flex flex-col relative overflow-hidden">
@@ -426,7 +401,8 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
               {role === "engineer" && (
                 <Task4EngineerPanel
                   routeChanged={task4?.routeChanged || false}
-                  onComplete={() => setTask4Completed(true)}
+                  wagonsDetached={task4?.wagonsDetached || false}
+                  onComplete={() => setTask4WagonsDetached(true)}
                 />
               )}
             </>
@@ -521,6 +497,12 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
           )}
         </div>
       </div>
+      {session.task4?.completed && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm text-green-500">
+          <h1 className="text-4xl font-bold mb-4">SYSTEM CLEANED. THREAT ELIMINATED.</h1>
+          <p className="text-xl">EcoRail is safe. The city is saved.</p>
+        </div>
+      )}
     </div>
   );
 }

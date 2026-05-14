@@ -39,19 +39,8 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
           Route Diverted
         </h2>
         <p className="font-mono text-fuchsia-100/80 mb-6 max-w-md">
-          Train 77 successfully rerouted to the Wastelands.
+          Route Diverted! Tell Engineer to detach wagons!
         </p>
-        <div className="bg-amber-500/10 border border-amber-500/50 p-4 rounded-lg flex items-start gap-3 max-w-md text-left">
-          <AlertTriangle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-mono text-sm font-bold text-amber-500 uppercase tracking-widest mb-1">
-              Warning
-            </h3>
-            <p className="font-mono text-xs text-amber-200/80 leading-relaxed">
-              TOXIC WAGONS STILL ATTACHED. ENGINEER INTERVENTION REQUIRED. Relay decouple status to confirm neutralization.
-            </p>
-          </div>
-        </div>
       </div>
     );
   }
@@ -66,7 +55,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
             Switch Control Panel
           </h2>
           <p className="text-fuchsia-400/60 font-mono text-sm mt-1 uppercase tracking-wider">
-            Active Target: Train 77
+            Active Target: ECORAIL
           </p>
         </div>
       </div>
@@ -85,7 +74,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
           <div className="space-y-6">
             {/* Node A */}
             <div className="flex items-center justify-between">
-              <span className="font-mono text-fuchsia-100 uppercase tracking-wider">Node A</span>
+              <span className="font-mono text-fuchsia-100 uppercase tracking-wider">SWITCH A</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setNodeA("LEFT")}
@@ -108,7 +97,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
 
             {/* Node B */}
             <div className="flex items-center justify-between">
-              <span className="font-mono text-fuchsia-100 uppercase tracking-wider">Node B</span>
+              <span className="font-mono text-fuchsia-100 uppercase tracking-wider">SWITCH B</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setNodeB("LEFT")}
@@ -131,7 +120,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
 
             {/* Node C */}
             <div className="flex items-center justify-between">
-              <span className="font-mono text-fuchsia-100 uppercase tracking-wider">Node C</span>
+              <span className="font-mono text-fuchsia-100 uppercase tracking-wider">SWITCH C</span>
               <div className="flex gap-2">
                 <button
                   onClick={() => setNodeC("LEFT")}

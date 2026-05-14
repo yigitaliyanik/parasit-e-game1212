@@ -20,7 +20,7 @@ export default function Task4AnalystPanel() {
 
     setTimeout(() => {
       setIsSearching(false);
-      if (trainId.trim() === "77") {
+      if (trainId.trim().toUpperCase() === "ECORAIL") {
         setShowResult(true);
       } else {
         setError(true);
@@ -54,7 +54,7 @@ export default function Task4AnalystPanel() {
               type="text"
               value={trainId}
               onChange={(e) => setTrainId(e.target.value)}
-              placeholder="e.g. 01"
+              placeholder="e.g. ECORAIL"
               className="flex-1 bg-black/50 border border-green-500/50 rounded px-4 py-3 font-mono text-green-100 placeholder:text-green-900 focus:outline-none focus:border-green-400"
             />
             <button
@@ -88,45 +88,13 @@ export default function Task4AnalystPanel() {
             <div className="flex items-center gap-3 mb-6">
               <Network className="w-6 h-6 text-cyan-400" />
               <h3 className="font-mono text-cyan-400 uppercase tracking-widest font-bold">
-                Route Analysis: Train 77
+                Route Analysis: ECORAIL
               </h3>
             </div>
 
             <div className="space-y-4 font-mono text-cyan-100/80">
-              <p>
-                <strong>Current Trajectory:</strong> City Center (Collision Imminent)
-              </p>
-              <p>
-                <strong>Alternative Route:</strong> The Wastelands (Safe Zone)
-              </p>
-              
-              <div className="mt-6 p-4 bg-cyan-950/30 border border-cyan-500/30 rounded">
-                <p className="text-cyan-300 font-bold mb-3 uppercase tracking-wider">
-                  Required Switch Configuration:
-                </p>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
-                    NODE A: <span className="text-white font-bold bg-cyan-500/20 px-2 py-0.5 rounded">LEFT</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-slate-500"></span>
-                    NODE B: <span className="text-slate-400 italic">No effect on target route</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
-                    NODE C: <span className="text-white font-bold bg-cyan-500/20 px-2 py-0.5 rounded">RIGHT</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 bg-green-950/20 border-l-4 border-green-500 text-sm font-mono text-green-200">
-              <p className="uppercase tracking-wider font-bold">
-                Directive:
-              </p>
-              <p className="opacity-80 mt-1">
-                Relay switch directions to EXECUTIVE to divert the train.
+              <p className="text-xl text-cyan-300 font-bold mb-3">
+                To save the city, tell the Executive: SWITCH A = LEFT, SWITCH C = RIGHT
               </p>
             </div>
           </motion.div>

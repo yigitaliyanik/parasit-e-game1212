@@ -5,8 +5,8 @@ import { AlertOctagon, Video, RadioReceiver } from "lucide-react";
 import { useTypewriter } from "@/hooks/useTypewriter";
 
 export default function Task4JournalistPanel() {
-  const alertText = "CRITICAL BREACH: Autonomous Cargo Train #77 hijacked by PARASIT[E]. Hijacked route: City Center. Collision in T-Minus 3 Minutes.";
-  const manifestText = "CARGO MANIFEST WARNING: Wagons 04, 08, and 15 contain highly reactive industrial acid. They must be decoupled before the train stops!";
+  const alertText = "ALERT: EcoRail Train is heading to the City Center!";
+  const manifestText = "SECRET: Wagons 04, 08, and 15 have toxic acid. They must be disconnected!";
 
   const { displayedText: typedAlert } = useTypewriter(alertText, 30);
   const { displayedText: typedManifest } = useTypewriter(manifestText, 40);
