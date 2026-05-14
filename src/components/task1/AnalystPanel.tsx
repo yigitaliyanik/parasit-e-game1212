@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Map as MapIcon, X, Cpu, Crosshair } from "lucide-react";
-import { ALL_DISTRICTS, GRID_TRANSFORMER_IDS } from "@/lib/types";
+import { ALL_DISTRICTS, DISTRICT_TRANSFORMER_MAP } from "@/lib/types";
 
 interface AnalystPanelProps {
   foundIds?: string[];
@@ -223,7 +223,7 @@ export default function AnalystPanel({ foundIds, onSubmitId }: AnalystPanelProps
                   <div className="text-right flex-shrink-0">
                     <p className="text-green-500/50 font-mono text-[9px] uppercase tracking-widest mb-1">Transformer_ID</p>
                     <p className="text-3xl font-black text-green-400 font-mono tracking-[0.15em] drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">
-                      {GRID_TRANSFORMER_IDS[selectedDistrict.district]}
+                      {selectedDistrict.id}
                     </p>
                   </div>
                   <button

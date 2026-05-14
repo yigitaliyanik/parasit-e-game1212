@@ -158,10 +158,20 @@ export const ALL_DISTRICTS: DistrictData[] = [
   },
 ];
 
+// Valid transformer IDs for Task 1
+export const GRID_TRANSFORMER_IDS = ["8812", "4021", "5590", "2234"];
+
 // ID lookup map for the Analyst
-export const GRID_TRANSFORMER_IDS: Record<string, string> = Object.fromEntries(
-  ALL_DISTRICTS.map(d => [d.district, d.id])
-);
+export const DISTRICT_TRANSFORMER_MAP: Record<string, string> = {
+  "Northgate": "8812",
+  "Westbridge": "4021",
+  "Southside": "5590",
+  "Eastend": "2234",
+  "Neon Gardens": "7710",
+  "Silicon Plaza": "3345",
+  "Ironworks District": "9012",
+  "Old Town Sector": "1108"
+};
 
 // Legacy compat — still used by some components
 export const TRANSFORMER_DATA = ALL_DISTRICTS.slice(0, 3);
