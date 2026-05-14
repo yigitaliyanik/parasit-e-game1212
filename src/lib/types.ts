@@ -34,6 +34,12 @@ export interface Task3State {
   completed: boolean;
 }
 
+export interface Task4State {
+  routeChanged: boolean;
+  wagonsDetached: boolean;
+  completed: boolean;
+}
+
 export interface GameSession {
   roomId: string;
   gameStatus: GameStatus;
@@ -54,13 +60,17 @@ export interface GameSession {
   task1?: Task1State;
   
   // Mission 2
-  currentMission?: number; // 1, 2, or 3
+  currentMission?: number; // 1, 2, 3, or 4
   mission2Ready?: Record<string, boolean>; // Ready check between missions
   task2?: Task2State;
 
   // Mission 3
   mission3Ready?: Record<string, boolean>; // Ready check before Mission 3
   task3?: Task3State;
+
+  // Mission 4
+  mission4Ready?: Record<string, boolean>; // Ready check before Mission 4
+  task4?: Task4State;
 
   // Legacy fields
   selectedLocations?: string[];

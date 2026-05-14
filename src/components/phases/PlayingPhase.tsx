@@ -15,9 +15,14 @@ import Task3JournalistPanel from "@/components/task3/JournalistPanel";
 import Task3AnalystPanel from "@/components/task3/AnalystPanel";
 import Task3ExecutivePanel from "@/components/task3/ExecutivePanel";
 import Task3EngineerPanel from "@/components/task3/EngineerPanel";
-import { Cpu, AlertTriangle, CheckCircle2 } from "lucide-react";
+import Task4JournalistPanel from "@/components/task4/JournalistPanel";
+import Task4AnalystPanel from "@/components/task4/AnalystPanel";
+import Task4ExecutivePanel from "@/components/task4/ExecutivePanel";
+import Task4EngineerPanel from "@/components/task4/EngineerPanel";
+import { Cpu, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
+import { useTypewriter } from "@/hooks/useTypewriter";
 
 interface PlayingPhaseProps {
   roomId: string;
@@ -49,6 +54,11 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
     setTask3EngineerLogged,
     setTask3PowerRestored,
     setTask3Completed,
+    setMission4Ready,
+    startMission4,
+    setTask4RouteChanged,
+    setTask4WagonsDetached,
+    setTask4Completed,
   } = useGameSession(roomId);
 
   const [task1Complete, setTask1Complete] = useState(false);
@@ -57,6 +67,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
   const task1 = session?.task1;
   const task2 = session?.task2;
   const task3 = session?.task3;
+  const task4 = session?.task4;
   const foundIds = task1?.analystFoundIds || [];
   const authorizedIds = task1?.executiveAuthorized || [];
   const repairedIds = task1?.engineerRepaired || [];
@@ -100,6 +111,18 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
     }
   }, [session, task2?.puzzleSolved, currentPlayer, startMission3]);
 
+  // Handle all players ready for Mission 4
+  useEffect(() => {
+    if (session?.currentMission === 3 && task3?.completed) {
+      const allReady = Object.values(session.players || {}).every(
+        (p) => session.mission4Ready?.[p.id]
+      );
+      if (allReady && currentPlayer?.isHost) {
+        startMission4();
+      }
+    }
+  }, [session, task3?.completed, currentPlayer, startMission4]);
+
   if (!session || !currentPlayer || !currentUser) return null;
 
   const roleColors: Record<Role, string> = {
@@ -115,6 +138,45 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
     engineer: "ENGINEER",
     executive: "EXECUTIVE",
   };
+
+  const victoryText = "The Parasit[e] has been permanently erased from the mainframe. The city's water is clean, the grid is stable, and the toxic express has been safely dismantled. You have saved the city.";
+  const { displayedText: typedVictory } = useTypewriter(victoryText, 40);
+
+  if (session.currentMission === 4 && task4?.completed) {
+    return (
+      <div className="min-h-screen bg-black text-slate-200 flex flex-col items-center justify-center relative overflow-hidden p-6">
+        {/* Victory Blue Matrix Rain (simulated via CSS or static for now, you can add a real canvas effect if you have one) */}
+        <div className="absolute inset-0 bg-blue-900/10" />
+        <div className="scanline" />
+        <div className="noise-bg" />
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.5 }}
+          className="relative z-10 text-center max-w-3xl"
+        >
+          <ShieldCheck className="w-24 h-24 text-blue-500 mx-auto mb-8 animate-pulse" />
+          <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 uppercase tracking-[0.2em] mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]">
+            System Purged<br />Threat Neutralized
+          </h1>
+          <p className="font-mono text-xl md:text-2xl text-blue-100/90 leading-relaxed min-h-[120px]">
+            {typedVictory}
+          </p>
+          
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 4 }}
+            onClick={() => window.location.href = '/'}
+            className="mt-12 px-8 py-4 border-2 border-blue-500 text-blue-400 font-mono uppercase tracking-widest hover:bg-blue-500/20 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all"
+          >
+            Return to Lobby / Disconnect
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-slate-200 flex flex-col relative overflow-hidden">
@@ -159,12 +221,23 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="w-4 h-4 text-amber-400" />
               <h4 className="font-mono text-xs text-slate-400 uppercase tracking-widest">
-                {session.currentMission === 3 ? "Mission 03: Central Hospital" : session.currentMission === 2 ? "Mission 02: Water Treatment" : "Mission 01: Power Grid"}
+                {session.currentMission === 4 ? "Mission 04: The Toxic Express" : session.currentMission === 3 ? "Mission 03: Central Hospital" : session.currentMission === 2 ? "Mission 02: Water Treatment" : "Mission 01: Power Grid"}
               </h4>
             </div>
 
             <div className="space-y-3">
-              {session.currentMission === 3 ? (
+              {session.currentMission === 4 ? (
+                <div className="space-y-2">
+                  <div className={`flex items-center gap-3 p-2 rounded border transition-all ${task4?.routeChanged ? "border-fuchsia-500/30 bg-fuchsia-500/5" : "border-slate-800 bg-black/20"}`}>
+                    <div className={`w-2 h-2 rounded-full ${task4?.routeChanged ? "bg-fuchsia-500 shadow-[0_0_8px_#d946ef]" : "bg-slate-700"}`} />
+                    <span className="font-mono text-[10px] text-slate-400">Route Diverted</span>
+                  </div>
+                  <div className={`flex items-center gap-3 p-2 rounded border transition-all ${task4?.wagonsDetached ? "border-cyan-500/30 bg-cyan-500/5" : "border-slate-800 bg-black/20"}`}>
+                    <div className={`w-2 h-2 rounded-full ${task4?.wagonsDetached ? "bg-cyan-500 shadow-[0_0_8px_#22d3ee]" : "bg-slate-700"}`} />
+                    <span className="font-mono text-[10px] text-slate-400">Wagons Decoupled</span>
+                  </div>
+                </div>
+              ) : session.currentMission === 3 ? (
                 <div className="space-y-2">
                   <div className={`flex items-center gap-3 p-2 rounded border transition-all ${task3?.executiveAccessGranted ? "border-green-500/30 bg-green-500/5" : "border-slate-800 bg-black/20"}`}>
                     <div className={`w-2 h-2 rounded-full ${task3?.executiveAccessGranted ? "bg-green-500 shadow-[0_0_8px_#22c55e]" : "bg-slate-700"}`} />
@@ -330,12 +403,33 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
                 Critical patients are stable. Parasit[e] has been expelled from this sector.
               </p>
               <button
-                onClick={setGameOver}
-                className="mt-8 px-6 py-3 border border-green-500 text-green-500 hover:bg-green-500/10 font-mono text-sm tracking-widest uppercase transition-colors"
+                onClick={() => setMission4Ready(!session.mission4Ready?.[currentPlayer.id])}
+                className={`mt-8 px-8 py-4 font-mono uppercase tracking-widest transition-all border ${
+                  session.mission4Ready?.[currentPlayer.id]
+                    ? "bg-fuchsia-500/20 text-fuchsia-400 border-fuchsia-500 shadow-[0_0_15px_rgba(217,70,239,0.3)]"
+                    : "bg-black text-slate-300 border-slate-700 hover:border-slate-500"
+                }`}
               >
-                Extract Team
+                {session.mission4Ready?.[currentPlayer.id] ? "Standing By..." : "Ready for Next Directive"}
               </button>
             </motion.div>
+          ) : session.currentMission === 4 ? (
+            <>
+              {role === "journalist" && <Task4JournalistPanel />}
+              {role === "analyst" && <Task4AnalystPanel />}
+              {role === "executive" && (
+                <Task4ExecutivePanel
+                  routeChanged={task4?.routeChanged || false}
+                  onUpdateRoute={() => setTask4RouteChanged(true)}
+                />
+              )}
+              {role === "engineer" && (
+                <Task4EngineerPanel
+                  routeChanged={task4?.routeChanged || false}
+                  onComplete={() => setTask4Completed(true)}
+                />
+              )}
+            </>
           ) : session.currentMission === 3 ? (
             <>
               {role === "journalist" && <Task3JournalistPanel />}

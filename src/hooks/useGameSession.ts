@@ -450,6 +450,42 @@ export const useGameSession = (roomId: string) => {
     await update(ref(db, `sessions/${roomId}/task3`), { completed: completed });
   };
 
+  // ─── NEW: Task 4 Methods ───────────────────────────────────────────
+
+  const setMission4Ready = async (ready: boolean) => {
+    if (!currentUser || !session) return;
+    await update(ref(db, `sessions/${roomId}/mission4Ready`), {
+      [currentUser.id]: ready
+    });
+  };
+
+  const startMission4 = async () => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}`), {
+      currentMission: 4,
+      task4: {
+        routeChanged: false,
+        wagonsDetached: false,
+        completed: false,
+      }
+    });
+  };
+
+  const setTask4RouteChanged = async (changed: boolean) => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task4`), { routeChanged: changed });
+  };
+
+  const setTask4WagonsDetached = async (detached: boolean) => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task4`), { wagonsDetached: detached });
+  };
+
+  const setTask4Completed = async (completed: boolean) => {
+    if (!session) return;
+    await update(ref(db, `sessions/${roomId}/task4`), { completed: completed });
+  };
+
   // ─── Derived State ─────────────────────────────────────────────────
 
   const currentPlayer = session?.players && currentUser ? session.players[currentUser.id] : null;
@@ -507,6 +543,13 @@ export const useGameSession = (roomId: string) => {
     setTask3EngineerLogged,
     setTask3PowerRestored,
     setTask3Completed,
+
+    // Task 4
+    setMission4Ready,
+    startMission4,
+    setTask4RouteChanged,
+    setTask4WagonsDetached,
+    setTask4Completed,
 
     // Legacy helpers
     setMission1Ready: async (ready: boolean) => {
