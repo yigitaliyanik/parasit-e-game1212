@@ -77,6 +77,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
               <span className="font-mono text-fuchsia-100 uppercase tracking-wider">SWITCH A</span>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => setNodeA("LEFT")}
                   className={`px-4 py-2 font-mono text-sm font-bold rounded transition-colors ${
                     nodeA === "LEFT" ? "bg-fuchsia-500 text-black" : "bg-black border border-fuchsia-500/50 text-fuchsia-400 hover:bg-fuchsia-500/10"
@@ -85,6 +86,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
                   LEFT
                 </button>
                 <button
+                  type="button"
                   onClick={() => setNodeA("RIGHT")}
                   className={`px-4 py-2 font-mono text-sm font-bold rounded transition-colors ${
                     nodeA === "RIGHT" ? "bg-fuchsia-500 text-black" : "bg-black border border-fuchsia-500/50 text-fuchsia-400 hover:bg-fuchsia-500/10"
@@ -100,6 +102,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
               <span className="font-mono text-fuchsia-100 uppercase tracking-wider">SWITCH B</span>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => setNodeB("LEFT")}
                   className={`px-4 py-2 font-mono text-sm font-bold rounded transition-colors ${
                     nodeB === "LEFT" ? "bg-fuchsia-500 text-black" : "bg-black border border-fuchsia-500/50 text-fuchsia-400 hover:bg-fuchsia-500/10"
@@ -108,6 +111,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
                   LEFT
                 </button>
                 <button
+                  type="button"
                   onClick={() => setNodeB("RIGHT")}
                   className={`px-4 py-2 font-mono text-sm font-bold rounded transition-colors ${
                     nodeB === "RIGHT" ? "bg-fuchsia-500 text-black" : "bg-black border border-fuchsia-500/50 text-fuchsia-400 hover:bg-fuchsia-500/10"
@@ -123,6 +127,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
               <span className="font-mono text-fuchsia-100 uppercase tracking-wider">SWITCH C</span>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => setNodeC("LEFT")}
                   className={`px-4 py-2 font-mono text-sm font-bold rounded transition-colors ${
                     nodeC === "LEFT" ? "bg-fuchsia-500 text-black" : "bg-black border border-fuchsia-500/50 text-fuchsia-400 hover:bg-fuchsia-500/10"
@@ -131,6 +136,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
                   LEFT
                 </button>
                 <button
+                  type="button"
                   onClick={() => setNodeC("RIGHT")}
                   className={`px-4 py-2 font-mono text-sm font-bold rounded transition-colors ${
                     nodeC === "RIGHT" ? "bg-fuchsia-500 text-black" : "bg-black border border-fuchsia-500/50 text-fuchsia-400 hover:bg-fuchsia-500/10"
@@ -146,6 +152,7 @@ export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Tas
         {/* Action Button & Errors */}
         <div className="text-center">
           <button
+            type="button"
             onClick={handleUpdate}
             disabled={isProcessing}
             className="w-full bg-fuchsia-500/10 border border-fuchsia-500 text-fuchsia-400 px-6 py-4 rounded font-mono uppercase tracking-widest font-bold hover:bg-fuchsia-500/20 disabled:opacity-50 transition-all"

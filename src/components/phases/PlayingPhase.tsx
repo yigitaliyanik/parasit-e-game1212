@@ -19,6 +19,7 @@ import Task4JournalistPanel from "@/components/task4/JournalistPanel";
 import Task4AnalystPanel from "@/components/task4/AnalystPanel";
 import Task4ExecutivePanel from "@/components/task4/ExecutivePanel";
 import Task4EngineerPanel from "@/components/task4/EngineerPanel";
+import VictoryScreen from "@/components/phases/VictoryScreen";
 import { Cpu, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
@@ -148,8 +149,6 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
     executive: "EXECUTIVE",
   };
 
-  const victoryText = "The Parasit[e] has been permanently erased from the mainframe. The city's water is clean, the grid is stable, and the toxic express has been safely dismantled. You have saved the city.";
-  const { displayedText: typedVictory } = useTypewriter(victoryText, 40);
 
 
 
@@ -498,10 +497,7 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
         </div>
       </div>
       {session.task4?.completed && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm text-green-500">
-          <h1 className="text-4xl font-bold mb-4">SYSTEM CLEANED. THREAT ELIMINATED.</h1>
-          <p className="text-xl">EcoRail is safe. The city is saved.</p>
-        </div>
+        <VictoryScreen roomId={roomId} />
       )}
     </div>
   );
