@@ -140,33 +140,33 @@ export default function Task4EngineerPanel({ routeChanged, wagonsDetached, onCom
               Enter Toxic Wagon Numbers:
             </p>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="flex gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4 max-w-sm mx-auto w-full">
                 <input
                   type="text"
                   value={wagon1}
                   onChange={(e) => setWagon1(e.target.value)}
                   placeholder="ID 1"
-                  className="flex-1 bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400"
+                  className="w-full bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400 transition-all"
                 />
                 <input
                   type="text"
                   value={wagon2}
                   onChange={(e) => setWagon2(e.target.value)}
                   placeholder="ID 2"
-                  className="flex-1 bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400"
+                  className="w-full bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400 transition-all"
                 />
                 <input
                   type="text"
                   value={wagon3}
                   onChange={(e) => setWagon3(e.target.value)}
                   placeholder="ID 3"
-                  className="flex-1 bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400"
+                  className="w-full bg-black/50 border border-cyan-500/50 rounded px-4 py-3 font-mono text-cyan-100 placeholder:text-cyan-900 focus:outline-none focus:border-cyan-400 transition-all"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-cyan-500/10 border border-cyan-500 text-cyan-500 px-6 py-4 mt-2 rounded font-mono uppercase tracking-widest font-bold hover:bg-cyan-500/20 transition-colors"
+                className="w-full max-w-sm mx-auto bg-cyan-500/10 border border-cyan-500 text-cyan-500 px-6 py-4 mt-2 rounded font-mono uppercase tracking-widest font-bold hover:bg-cyan-500/20 transition-colors"
               >
                 Confirm Targets
               </button>
