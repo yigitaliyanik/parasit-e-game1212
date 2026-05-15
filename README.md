@@ -34,39 +34,5 @@ This project is designed as more than just a game. It is a simulation of **Futur
 - **Crisis Management**: Real-time cooperation under pressure.
 - **Environmental Awareness**: Mission themes highlight global issues such as water pollution, energy crises, and sustainable transit (EcoRail).
 
-## ⚙️ Installation & Setup
-
-Follow these steps to run Parasit[e] locally:
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/yigitaliyanik/parasit-e-game.git
-    cd parasit-e-game
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Environment Variables:**
-    Create a `.env.local` file and add your Firebase configuration:
-    ```env
-    NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-    NEXT_PUBLIC_FIREBASE_DATABASE_URL=your_db_url
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-    ```
-
-4.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
----
 
 *Built for the 2026 AI Jury Review. Designed for high-performance real-time collaboration.*
