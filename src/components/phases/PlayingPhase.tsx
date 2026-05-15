@@ -24,6 +24,7 @@ import { Cpu, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import { useTypewriter } from "@/hooks/useTypewriter";
+import { useAudio } from "@/contexts/AudioContext";
 import EcoAIHelper from "@/components/ui/EcoAIHelper";
 
 interface PlayingPhaseProps {
@@ -124,6 +125,14 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
       }
     }
   }, [session, task3?.completed, currentPlayer, startMission4]);
+
+  const { setBGM } = useAudio();
+
+  // Manage BGM: Stop during active tasks, restart on unmount
+  useEffect(() => {
+    setBGM(false, true); // Stop BGM and mark as mission scene
+    return () => setBGM(true, false); // Resume BGM when leaving playing phase
+  }, [setBGM]);
 
   // Handle Mission 4 Victory Condition
   useEffect(() => {

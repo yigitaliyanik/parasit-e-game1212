@@ -9,7 +9,7 @@ interface AudioContextType {
   setVolume: (v: number) => void;
   playSFX: (type: "click" | "typing" | "keypress") => void;
   stopSFX: (type: "click" | "typing" | "keypress") => void;
-  setBGM: (play: boolean) => void;
+  setBGM: (play: boolean, isMission?: boolean) => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -18,6 +18,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolumeState] = useState(0.5);
   const [bgmPlaying, setBgmPlaying] = useState(false);
+  const [isMissionScene, setIsMissionScene] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   
   const bgmRef = useRef<HTMLAudioElement | null>(null);
@@ -30,7 +31,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Initialize audio elements on mount
   useEffect(() => {
     bgmRef.current = new Audio("/sounds/bgm.mp3");
-    bgmRef.current.loop = false; // We'll handle looping manually for the crossfade/restart
+    bgmRef.current.loop = false;
     
     clickRef.current = new Audio("/sounds/click.mp3");
     typingRef.current = new Audio("/sounds/typing.mp3");
@@ -79,56 +80,58 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (keypressRef.current) keypressRef.current.volume = activeVol * 0.3;
   }, [volume, isMuted]);
 
-  // BGM Fade-Loop Logic
+  // BGM Seamless Fade-Loop Logic
   useEffect(() => {
     if (!bgmRef.current) return;
 
     const checkFade = () => {
-      if (!bgmRef.current || !bgmPlaying || isMuted) return;
-
       const audio = bgmRef.current;
+      if (!audio || !bgmPlaying || isMuted || isMissionScene) return;
+
       const duration = audio.duration;
       const currentTime = audio.currentTime;
 
       if (!duration || isNaN(duration)) return;
 
-      // Restart/Loop Logic
-      if (currentTime >= duration - 0.1) {
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-      }
+      const targetVol = volume * 0.4;
 
-      // Fade Out (last 3 seconds)
+      // Seamless Restart Logic (Cross-fade simulation)
+      // When 3 seconds left, start fading out
       if (duration - currentTime < 3) {
         const remaining = duration - currentTime;
-        const fadeVol = (remaining / 3) * (volume * 0.4);
-        audio.volume = Math.max(0, fadeVol);
+        audio.volume = Math.max(0, (remaining / 3) * targetVol);
+        
+        // When almost at the end, restart and fade in
+        if (remaining < 0.2) {
+          audio.currentTime = 0;
+          audio.play().catch(() => {});
+        }
       } 
-      // Fade In (first 3 seconds)
+      // Fade In Logic
       else if (currentTime < 3) {
-        const fadeVol = (currentTime / 3) * (volume * 0.4);
-        audio.volume = Math.max(0, fadeVol);
+        audio.volume = Math.max(0, (currentTime / 3) * targetVol);
       } 
-      // Normal volume
+      // Normal Playback
       else {
-        audio.volume = volume * 0.4;
+        audio.volume = targetVol;
       }
     };
 
     const interval = setInterval(checkFade, 100);
     return () => clearInterval(interval);
-  }, [bgmPlaying, isMuted, volume]);
+  }, [bgmPlaying, isMuted, volume, isMissionScene]);
 
-  // Handle BGM playback
+  // Handle BGM playback state
   useEffect(() => {
     if (!bgmRef.current || !hasInteracted) return;
 
-    if (isMuted || !bgmPlaying) {
+    // BGM should NOT play if mission is active OR muted OR stopped
+    if (isMuted || !bgmPlaying || isMissionScene) {
       bgmRef.current.pause();
     } else {
       bgmRef.current.play().catch(() => {});
     }
-  }, [isMuted, bgmPlaying, hasInteracted]);
+  }, [isMuted, bgmPlaying, hasInteracted, isMissionScene]);
 
   const toggleMute = () => {
     setIsMuted(prev => {
@@ -172,8 +175,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const setBGM = (play: boolean) => {
+  const setBGM = (play: boolean, isMission: boolean = false) => {
     setBgmPlaying(play);
+    setIsMissionScene(isMission);
   };
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Wrench, ShieldAlert, CheckCircle2, Lock } from "lucide-react";
+import { Wrench, ShieldAlert, CheckCircle2, Lock, Train } from "lucide-react";
 
 interface Task4EngineerPanelProps {
   routeChanged: boolean;
@@ -177,54 +177,80 @@ export default function Task4EngineerPanel({ routeChanged, wagonsDetached, onCom
         )}
 
         {stage === 'reflex' && (
-          <div className="bg-black/40 border border-cyan-500/30 p-6 rounded-lg text-center">
-            <h3 className="font-mono text-cyan-400 uppercase tracking-widest font-bold mb-6">
-              Decoupling Sequence Initiated
-            </h3>
-            
-            <p className="font-mono text-sm text-cyan-100/80 mb-8 uppercase tracking-widest">
-              Click DECOUPLE when marker is in GREEN zone.<br/>
-              Successes needed: {3 - successCount}
-            </p>
+          <div className="flex-1 flex flex-col items-center justify-center space-y-12 py-8">
+            {/* Main Train Visualization */}
+            <div className="grid grid-cols-4 gap-4 justify-center items-end w-full max-w-2xl min-h-[160px]">
+              {/* Engine */}
+              <div className="flex flex-col items-center">
+                <div className="w-24 h-20 bg-cyan-900/40 border-2 border-cyan-400 rounded-t-xl relative flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.1)_0%,transparent_70%)] animate-pulse" />
+                  <Train className="w-10 h-10 text-cyan-400 relative z-10" />
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-4 h-8 bg-cyan-500/20 border border-cyan-500/50 rounded-t" />
+                </div>
+                <div className="w-28 h-6 bg-slate-800 border-2 border-cyan-900 rounded-b-lg -mt-1 shadow-[0_4px_10px_rgba(0,0,0,0.5)]" />
+                <span className="text-[10px] font-mono text-cyan-500 mt-2 font-bold tracking-widest uppercase">Engine</span>
+              </div>
 
-            <div className="relative h-12 bg-slate-800 rounded-full mb-8 overflow-hidden border border-cyan-900">
-              {/* Target Zone */}
-              <div 
-                className="absolute h-full bg-green-500/40 border-x-2 border-green-400"
-                style={{ left: `${ZONE_START}%`, width: `${ZONE_END - ZONE_START}%` }}
-              />
-              
-              {/* Moving Marker */}
-              <div 
-                className="absolute top-0 bottom-0 w-2 bg-white shadow-[0_0_10px_#fff]"
-                style={{ left: `${markerPos}%`, transform: 'translateX(-50%)' }}
-              />
+              {/* Wagons */}
+              {[0, 1, 2].map((i) => {
+                const isDetached = i < successCount;
+                return (
+                  <div key={i} className={`flex flex-col items-center transition-all duration-700 ease-in-out ${isDetached ? 'opacity-20 translate-y-12 rotate-3 scale-95 pointer-events-none' : 'opacity-100'}`}>
+                    <div className="w-24 h-16 bg-slate-900/60 border-2 border-cyan-500/40 rounded relative flex items-center justify-center group overflow-hidden">
+                       <div className="absolute bottom-0 left-0 right-0 bg-green-500/10 transition-all duration-500" style={{ height: '60%' }} />
+                       <span className="relative z-10 font-mono text-cyan-300/80 font-bold text-lg">W-{["04", "08", "15"][i]}</span>
+                       {isDetached && <CheckCircle2 className="absolute top-1 right-1 w-4 h-4 text-green-500" />}
+                    </div>
+                    <div className="w-28 h-4 bg-slate-800 border-x-2 border-b-2 border-cyan-900 rounded-b -mt-1" />
+                    <span className="text-[10px] font-mono text-cyan-700 mt-2 uppercase">{isDetached ? 'Detached' : 'Wagon'}</span>
+                  </div>
+                );
+              })}
             </div>
 
-            <button
-              onClick={handleDecouple}
-              className="w-full bg-cyan-500/20 border-2 border-cyan-400 text-cyan-300 font-bold font-mono text-xl py-6 rounded hover:bg-cyan-500/40 active:bg-cyan-400 active:text-black transition-all"
-            >
-              DECOUPLE
-            </button>
-
-            {reflexError && (
-              <p className="font-mono text-sm text-red-500 mt-4 animate-pulse font-bold">
-                MISS! Timing off. Try again.
-              </p>
-            )}
-            
-            <div className="mt-8 flex justify-center gap-4">
-              {[0, 1, 2].map((i) => (
+            {/* Reflex Bar */}
+            <div className="w-full max-w-md">
+              <div className="relative h-12 bg-slate-900 border-2 border-cyan-900 rounded-lg overflow-hidden shadow-inner">
+                {/* Safe Zone */}
                 <div 
-                  key={i} 
-                  className={`w-6 h-6 rounded-full border-2 ${
-                    i < successCount 
-                      ? 'bg-green-500 border-green-400 shadow-[0_0_10px_#22c55e]' 
-                      : 'bg-transparent border-slate-600'
-                  }`} 
+                  className="absolute h-full bg-cyan-400/20 border-x border-cyan-400/40"
+                  style={{ left: `${ZONE_START}%`, width: `${ZONE_END - ZONE_START}%` }}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-[8px] font-mono text-cyan-400 font-bold tracking-tighter">SAFE_ZONE</span>
+                  </div>
+                </div>
+
+                {/* Moving Marker */}
+                <div 
+                  className="absolute top-0 bottom-0 w-2 bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)] z-10"
+                  style={{ left: `${markerPos}%`, transition: 'none' }}
                 />
-              ))}
+              </div>
+              
+              <div className="flex justify-between mt-2 px-1">
+                <span className="text-[9px] font-mono text-cyan-900">0%</span>
+                <span className="text-[10px] font-mono text-cyan-500/60">T_ALGN_CALIB</span>
+                <span className="text-[9px] font-mono text-cyan-900">100%</span>
+              </div>
+            </div>
+
+            <div className="w-full max-w-md space-y-4">
+              <button
+                onClick={handleDecouple}
+                disabled={successCount >= 3}
+                className="w-full bg-cyan-500/10 border-2 border-cyan-400/50 text-cyan-300 font-bold font-mono text-xl py-6 rounded hover:bg-cyan-500/20 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(6,182,212,0.1)] group disabled:opacity-20"
+              >
+                <span className="group-hover:tracking-widest transition-all">
+                  {successCount >= 3 ? "SYSTEM_STABLE" : `DECOUPLE_WAGON_${successCount + 1}`}
+                </span>
+              </button>
+
+              {reflexError && (
+                <p className="font-mono text-sm text-red-500 text-center animate-pulse font-bold bg-red-500/10 py-2 border border-red-500/20 rounded">
+                  MISS! CALIBRATION_ERROR. REDEPLOYING...
+                </p>
+              )}
             </div>
           </div>
         )}
