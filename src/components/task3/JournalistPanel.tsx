@@ -7,7 +7,7 @@ import { useTypewriter } from "@/hooks/useTypewriter";
 export default function JournalistPanel() {
   const [showIncoming, setShowIncoming] = useState(true);
 
-  const rawMessage = "Hey... Is anyone there? I'm George, 25 years janitor at Central Hospital. Things are crazy here. Lights flickered, doors locked us in. I'm at the 2nd floor Newborn Unit, incubators are failing! 3rd floor Intensive Care (Life Support) is on battery, won't last long. 1st floor Emergency Room is totally dark, pure panic. 4th floor Adult Ward is stable for now. I left the maintenance port open for you. Access code: HOSPITAL-77. Hurry!";
+  const rawMessage = "Hey... Is anyone there? I'm George, 25 years janitor at Central Hospital. I've cleaned these halls for decades, I know the drill. The ones who haven't even taken their first breath yet? They always come first. Next are those fighting for their last breath on machines. After them, the ones bleeding in the lobby screaming for help. And the folks just recovering in their beds? They wait at the very end. I left the maintenance port open for you. Access code: HOSPITAL-77. Hurry!";
 
   const { displayedText, isComplete } = useTypewriter(rawMessage, 30, !showIncoming);
 

@@ -10,15 +10,15 @@ export default function JournalistPanel() {
   const transcripts = [
     {
       time: "02:14 AM",
-      text: "...pressure dropping in Sector 4... valve override failed... someone locked us out of the main array..."
+      text: "Hey, what's happening? The water pressure is dropping fast!"
     },
     {
       time: "02:22 AM",
-      text: "...need authorization code... it's the sequence of the founding year backwards... wait, no, the facility sector code..."
+      text: "The automated system is completely down! We need someone to manually balance the valves right now, or the pipes will burst!"
     },
     {
       time: "02:45 AM",
-      text: "...tell the Engineer to connect the main intake to the filtration bypass, otherwise the pressure will burst the pipes..."
+      text: "Tell the Engineer to get to the main valve array quickly!"
     }
   ];
 
