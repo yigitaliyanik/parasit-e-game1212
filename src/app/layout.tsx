@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 import { AudioProvider } from "@/contexts/AudioContext";
-import AudioToggle from "@/components/ui/AudioToggle";
+import AudioController from "@/components/ui/AudioController";
 
 export default function RootLayout({
   children,
@@ -41,7 +41,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-black">
         <AudioProvider>
-          <AudioToggle />
+          <AudioController />
           {children}
         </AudioProvider>
       </body>
