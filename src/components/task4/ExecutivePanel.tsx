@@ -9,6 +9,16 @@ interface Task4ExecutivePanelProps {
   onUpdateRoute: () => void;
 }
 
+/**
+ * Task4ExecutivePanel Component
+ * 
+ * Manages the high-level routing logic for the EcoRail mission.
+ * 
+ * Logic:
+ * - Requires a specific combination of junction switch states (A=LEFT, C=RIGHT).
+ * - Synchronizes the 'routeChanged' state globally to trigger the final physical 
+ *   intervention phase for the Engineer.
+ */
 export default function Task4ExecutivePanel({ routeChanged, onUpdateRoute }: Task4ExecutivePanelProps) {
   const [nodeA, setNodeA] = useState<"LEFT" | "RIGHT">("RIGHT");
   const [nodeB, setNodeB] = useState<"LEFT" | "RIGHT">("LEFT");

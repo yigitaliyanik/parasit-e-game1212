@@ -4,6 +4,15 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Map, Search, Network } from "lucide-react";
 
+/**
+ * Task4AnalystPanel Component
+ * 
+ * Provides the tactical decoding layer for the Data Analyst.
+ * 
+ * Responsibilities:
+ * - Decodes complex system manifests to find hidden routing codes.
+ * - Coordinates with the Executive to provide the required junction node states.
+ */
 export default function Task4AnalystPanel() {
   const [trainId, setTrainId] = useState("");
   const [isSearching, setIsSearching] = useState(false);

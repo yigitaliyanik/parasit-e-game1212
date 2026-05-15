@@ -5,6 +5,20 @@ import { ref, onValue, set, update, get, increment, onDisconnect } from 'firebas
 import { db, signInAnonymousUser } from '@/lib/firebase';
 import { GameSession, Player, Role, GameStatus, ALL_DISTRICTS } from '@/lib/types';
 
+/**
+ * useGameSession Hook
+ * 
+ * The central synchronization engine for the Parasit[e] multiplayer experience.
+ * This hook manages the real-time lifecycle of a game session, including:
+ * 
+ * 1. Authentication: Integrates with Firebase Anonymous Auth for guest access.
+ * 2. State Sync: Subscribes to Real-time Database paths to keep all 4 clients in sync.
+ * 3. Host Migration: Automatically promotes a new host if the original disconnects.
+ * 4. Presence Management: Handles player entry, role selection, and readiness states.
+ * 5. Game Progression: Manages transitions between Lobby, Briefing, and Active Playing phases.
+ * 
+ * @param roomId The unique identifier for the game room.
+ */
 export const useGameSession = (roomId: string) => {
   const [session, setSession] = useState<GameSession | null>(null);
   const [loading, setLoading] = useState(true);

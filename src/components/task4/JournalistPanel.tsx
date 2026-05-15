@@ -4,6 +4,17 @@ import { motion } from "framer-motion";
 import { AlertOctagon, Video, RadioReceiver } from "lucide-react";
 import { useTypewriter } from "@/hooks/useTypewriter";
 
+/**
+ * Task4JournalistPanel Component
+ * 
+ * Implements the investigative layer for the Journalist in Mission 4.
+ * 
+ * Features:
+ * - Intelligence Gathering: Receives intercepted manifestos about the train.
+ * - Narrative Delivery: Uses a typewriter effect to simulate secure transmission decryption.
+ * - Crucial Intel: Provides the 'ECORAIL' Train ID and specific wagon numbers (04, 08, 15)
+ *   that need to be disconnected by the Engineer.
+ */
 export default function Task4JournalistPanel() {
   const alertText = "ALERT: EcoRail Train is heading to the City Center!\nINTERCEPTED MANIFESTO: The target Train ID is 'ECORAIL'.";
   const manifestText = "SECRET: Wagons 04, 08, and 15 have toxic acid. They must be disconnected!";

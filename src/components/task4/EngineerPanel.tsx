@@ -9,6 +9,18 @@ interface Task4EngineerPanelProps {
   onComplete: () => void;
 }
 
+/**
+ * Task4EngineerPanel Component
+ * 
+ * Implements the physical intervention phase for the Engineer in Mission 4 (EcoRail).
+ * 
+ * Key Features:
+ * - Train Visualization: A fixed grid-based SVG/CSS visualization of the Engine and Wagons.
+ * - Reflex Challenge: A timing-based mini-game requiring the user to click when a marker 
+ *   aligns with a calibration zone (linear volume ramping logic for UI feedback).
+ * - State Sync: Notifies the parent phase of successful wagon decoupling to trigger 
+ *   global mission progression.
+ */
 export default function Task4EngineerPanel({ routeChanged, wagonsDetached, onComplete }: Task4EngineerPanelProps) {
   const [wagon1, setWagon1] = useState("");
   const [wagon2, setWagon2] = useState("");

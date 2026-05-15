@@ -14,6 +14,18 @@ interface AudioContextType {
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
+/**
+ * AudioProvider Component
+ * 
+ * Manages the global audio state for the Parasit[e] game, including Background Music (BGM),
+ * Sound Effects (SFX), and user preferences (mute/volume).
+ * 
+ * Key Features:
+ * - Web Audio API Integration: Uses GainNodes for precise volume ramping.
+ * - Seamless BGM Looping: Implements a custom cross-fade loop using time-based checks.
+ * - Interaction Gating: Complies with browser autoplay policies by waiting for user interaction.
+ * - SFX Management: Specialized handling for typing, clicking, and keypress tactile feedback.
+ */
 export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolumeState] = useState(0.5);
@@ -22,6 +34,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [hasInteracted, setHasInteracted] = useState(false);
   
   const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
   const clickRef = useRef<HTMLAudioElement | null>(null);
   const typingRef = useRef<HTMLAudioElement | null>(null);
   const keypressRef = useRef<HTMLAudioElement | null>(null);
@@ -65,28 +79,64 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => {
       bgmRef.current?.pause();
       typingRef.current?.pause();
+      keypressRef.current?.pause();
       window.removeEventListener("click", handleFirstInteraction);
       window.removeEventListener("keydown", handleFirstInteraction);
       window.removeEventListener("keydown", handleGlobalKeydown);
     };
   }, []);
 
-  // Sync volumes
+  /**
+   * Initializes the Web Audio API context and connects the BGM source to a GainNode.
+   * This allows for high-precision volume ramping and cross-fading.
+   */
+  const initWebAudio = () => {
+    if (audioCtxRef.current || !bgmRef.current) return;
+    
+    const AudioCtxClass = (window.AudioContext || (window as any).webkitAudioContext);
+    const ctx = new AudioCtxClass();
+    const gainNode = ctx.createGain();
+    const source = ctx.createMediaElementSource(bgmRef.current);
+    
+    source.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    audioCtxRef.current = ctx;
+    gainNodeRef.current = gainNode;
+  };
+
+  // Handle Global Volume & Muting
   useEffect(() => {
     const activeVol = isMuted ? 0 : volume;
-    if (bgmRef.current) bgmRef.current.volume = activeVol * 0.4; // BGM is naturally loud
-    if (clickRef.current) clickRef.current.volume = activeVol;
-    if (typingRef.current) typingRef.current.volume = activeVol * 0.5;
+    
+    // Update GainNode if exists
+    if (gainNodeRef.current && audioCtxRef.current) {
+      const now = audioCtxRef.current.currentTime;
+      gainNodeRef.current.gain.linearRampToValueAtTime(activeVol * 0.4, now + 0.1);
+    } else if (bgmRef.current) {
+      bgmRef.current.volume = activeVol * 0.4;
+    }
+
+    if (clickRef.current) clickRef.current.volume = activeVol * 0.5;
+    if (typingRef.current) typingRef.current.volume = activeVol * 0.2;
     if (keypressRef.current) keypressRef.current.volume = activeVol * 0.3;
   }, [volume, isMuted]);
 
-  // BGM Seamless Fade-Loop Logic
+  /**
+   * Seamless Fade-Loop Logic
+   * Monitor the current time of the BGM track. When nearing the end (last 3 seconds),
+   * trigger a linear ramp-down on the GainNode while simultaneously preparing the 
+   * track to restart and ramp back up.
+   */
   useEffect(() => {
     if (!bgmRef.current) return;
 
     const checkFade = () => {
       const audio = bgmRef.current;
-      if (!audio || !bgmPlaying || isMuted || isMissionScene) return;
+      const ctx = audioCtxRef.current;
+      const gain = gainNodeRef.current;
+      
+      if (!audio || !bgmPlaying || isMuted || isMissionScene || !ctx || !gain) return;
 
       const duration = audio.duration;
       const currentTime = audio.currentTime;
@@ -96,25 +146,20 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const targetVol = volume * 0.4;
 
       // Seamless Restart Logic (Cross-fade simulation)
-      // When 3 seconds left, start fading out
       if (duration - currentTime < 3) {
         const remaining = duration - currentTime;
-        audio.volume = Math.max(0, (remaining / 3) * targetVol);
         
-        // When almost at the end, restart and fade in
+        // Start ramping down
+        const now = ctx.currentTime;
+        gain.gain.linearRampToValueAtTime(0, now + remaining);
+        
         if (remaining < 0.2) {
           audio.currentTime = 0;
           audio.play().catch(() => {});
+          // Ramp back up
+          gain.gain.linearRampToValueAtTime(targetVol, ctx.currentTime + 3);
         }
       } 
-      // Fade In Logic
-      else if (currentTime < 3) {
-        audio.volume = Math.max(0, (currentTime / 3) * targetVol);
-      } 
-      // Normal Playback
-      else {
-        audio.volume = targetVol;
-      }
     };
 
     const interval = setInterval(checkFade, 100);
@@ -125,7 +170,15 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (!bgmRef.current || !hasInteracted) return;
 
-    // BGM should NOT play if mission is active OR muted OR stopped
+    // Initialize Web Audio on first play
+    if (bgmPlaying && !audioCtxRef.current) {
+      initWebAudio();
+    }
+
+    if (audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+
     if (isMuted || !bgmPlaying || isMissionScene) {
       bgmRef.current.pause();
     } else {

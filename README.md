@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Parasit[e] - A Cyberpunk Co-op Web Experience
 
-## Getting Started
+**Tagline:** A 4-player real-time cooperative puzzle game focused on future professions and environmental sustainability.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌌 Story & Context
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+In the year 2045, the utopian city of **Ecoville** was struck by a mysterious cosmic fragment. Hidden within this meteor was an electromagnetic entity known as **Parasit[e]**. 
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This entity has begun infecting the city's critical infrastructure—power grids, water facilities, and transit systems. A specialized task force has been deployed to neutralize the infection. Your team must synchronize their skills across the network to purge the parasite and save the city's energy resources before the grid collapses forever.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠 Tech Stack
 
-## Learn More
+- **Framework:** [Next.js](https://nextjs.org/) (App Router)
+- **Real-time Backend:** [Firebase](https://firebase.google.com/) (Real-time Database & Anonymous Auth)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Animations:** [Framer Motion](https://www.framer.com/motion/)
+- **AI Assisted Development:** Built with the assistance of **Gemini** & **Antigravity** (Google DeepMind).
 
-To learn more about Next.js, take a look at the following resources:
+## 👥 Core Roles
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Parasit[e] requires 4 distinct roles to work in perfect harmony:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1.  **Journalist 📰**: The investigator. Gathers clues from media, newspapers, and radio intercepts to identify targets.
+2.  **Data Analyst 📊**: The strategist. Interprets complex data sets and coordinates locations based on the Journalist's findings.
+3.  **Executive 💼**: The commander. Manages high-level system authorizations and routing protocols.
+4.  **Engineer 🔧**: The operator. Executes the physical repair and hardware manipulation via specialized interactive puzzles.
 
-## Deploy on Vercel
+## 🚀 Vision & Purpose
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This project is designed as more than just a game. It is a simulation of **Future Skills**:
+- **Data Literacy**: Players must analyze information quickly and accurately.
+- **Crisis Management**: Real-time cooperation under pressure.
+- **Environmental Awareness**: Mission themes highlight global issues such as water pollution, energy crises, and sustainable transit (EcoRail).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ⚙️ Installation & Setup
+
+Follow these steps to run Parasit[e] locally:
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/yigitaliyanik/parasit-e-game.git
+    cd parasit-e-game
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Environment Variables:**
+    Create a `.env.local` file and add your Firebase configuration:
+    ```env
+    NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+    NEXT_PUBLIC_FIREBASE_DATABASE_URL=your_db_url
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+    ```
+
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+---
+
+*Built for the 2026 AI Jury Review. Designed for high-performance real-time collaboration.*
