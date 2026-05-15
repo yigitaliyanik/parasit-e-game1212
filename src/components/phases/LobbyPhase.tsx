@@ -6,6 +6,7 @@ import { useGameSession } from "@/hooks/useGameSession";
 import { Role, Player } from "@/lib/types";
 import { Zap, Activity, Shield, Search, Loader2, Copy, Check } from "lucide-react";
 import clsx from "clsx";
+import { useAudio } from "@/contexts/AudioContext";
 
 interface LobbyPhaseProps {
   roomId: string;
@@ -141,7 +142,12 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
   const { session, currentUser, currentPlayer, selectRole, toggleReady, updateGameStatus, randomizeRoles, lockRoles, leaveLobby } = useGameSession(roomId);
   const [copied, setCopied] = useState(false);
   const [notifications, setNotifications] = useState<{id: string, msg: string}[]>([]);
+  const { setBGM, playSFX } = useAudio();
   const prevPlayersRef = useRef<Record<string, Player>>({});
+
+  useEffect(() => {
+    setBGM(true);
+  }, []);
 
   // Generate a random stable PRST ID for the cards based on roomId so it doesn't flicker
   const prstId = useMemo(() => {
@@ -198,6 +204,7 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
   };
 
   const handlePrimaryAction = () => {
+    playSFX("click");
     if (allReady && currentPlayer.isHost) {
       updateGameStatus("briefing");
     } else {
@@ -206,6 +213,7 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
   };
 
   const handleLeaveLobby = async () => {
+    playSFX("click");
     await leaveLobby();
     router.push('/');
   };
@@ -302,7 +310,12 @@ export default function LobbyPhase({ roomId }: LobbyPhaseProps) {
             return (
               <button
                 key={role.id}
-                onClick={() => !isTaken && selectRole(role.id)}
+                onClick={() => {
+                  if (!isTaken) {
+                    playSFX("click");
+                    selectRole(role.id);
+                  }
+                }}
                 disabled={isTaken}
                 className={clsx(
                   "relative flex flex-col justify-between h-96 p-6 rounded-xl border transition-all duration-300 font-mono text-left group overflow-hidden",

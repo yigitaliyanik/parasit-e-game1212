@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Role } from "@/lib/types";
+import { useGameSession } from "@/hooks/useGameSession"; // Wait, I might not need this here
+import { useAudio } from "@/contexts/AudioContext";
 import { useTypewriter } from "@/hooks/useTypewriter";
 
 interface EcoAIHelperProps {
@@ -42,8 +44,18 @@ export default function EcoAIHelper({ role, missionNumber }: EcoAIHelperProps) {
   const [showBubble, setShowBubble] = useState(false);
   const [currentMission, setCurrentMission] = useState(missionNumber);
 
+  const { playSFX, stopSFX } = useAudio();
   const hintText = HINTS[missionNumber]?.[role] || "I'm analyzing the situation. Stay alert, Agent.";
-  const { displayedText } = useTypewriter(hintText, 30, showBubble);
+  const { displayedText, isComplete } = useTypewriter(hintText, 30, showBubble);
+
+  useEffect(() => {
+    if (showBubble && !isComplete) {
+      playSFX("typing");
+    } else {
+      stopSFX("typing");
+    }
+    return () => stopSFX("typing");
+  }, [showBubble, isComplete]);
 
   // Reset hints when mission changes
   useEffect(() => {
@@ -57,7 +69,9 @@ export default function EcoAIHelper({ role, missionNumber }: EcoAIHelperProps) {
   const handleIconClick = () => {
     if (showBubble) {
       setShowBubble(false);
+      stopSFX("typing");
     } else if (hintsRemaining > 0) {
+      playSFX("click");
       setShowBubble(true);
       setHintsRemaining(prev => prev - 1);
     }

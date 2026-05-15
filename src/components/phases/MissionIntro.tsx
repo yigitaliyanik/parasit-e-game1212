@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useGameSession } from "@/hooks/useGameSession";
 import { MatrixRain } from "@/components/MatrixRain";
+import { useAudio } from "@/contexts/AudioContext";
+import { useTypewriter } from "@/hooks/useTypewriter";
 
 interface MissionIntroProps {
   roomId: string;
@@ -13,6 +15,7 @@ export default function MissionIntro({ roomId }: MissionIntroProps) {
   const { session, currentPlayer, enterPlayingPhase } = useGameSession(roomId);
   const [timeLeft, setTimeLeft] = useState(10);
   const [hasTriggered, setHasTriggered] = useState(false);
+  const { setBGM, playSFX, stopSFX } = useAudio();
 
   const missionNumber = session?.currentMission || 1;
 
@@ -36,6 +39,19 @@ export default function MissionIntro({ roomId }: MissionIntroProps) {
   };
 
   const currentMission = missionInfo[missionNumber] || missionInfo[1];
+  const { displayedText, isComplete } = useTypewriter(currentMission.text, 30);
+
+  useEffect(() => {
+    setBGM(true);
+    playSFX("typing");
+    return () => stopSFX("typing");
+  }, []);
+
+  useEffect(() => {
+    if (isComplete) {
+      stopSFX("typing");
+    }
+  }, [isComplete]);
 
   useEffect(() => {
     if (timeLeft <= 0 && !hasTriggered && currentPlayer?.isHost) {
@@ -52,6 +68,7 @@ export default function MissionIntro({ roomId }: MissionIntroProps) {
 
   const handleStartNow = () => {
     if (currentPlayer?.isHost && !hasTriggered) {
+      playSFX("click");
       setHasTriggered(true);
       enterPlayingPhase();
     }
@@ -87,8 +104,9 @@ export default function MissionIntro({ roomId }: MissionIntroProps) {
           {currentMission.title}
         </h1>
 
-        <p className="text-xl md:text-2xl text-gray-200 mt-2 max-w-3xl text-center leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-          {currentMission.text}
+        <p className="text-xl md:text-2xl text-gray-200 mt-2 max-w-3xl text-center leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] min-h-[120px]">
+          {displayedText}
+          {!isComplete && <span className="inline-block w-2 h-6 bg-green-500 ml-1 animate-pulse" />}
         </p>
 
         <div className="mt-16 flex flex-col items-center gap-6">

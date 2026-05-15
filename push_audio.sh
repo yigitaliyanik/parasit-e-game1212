@@ -1,6 +1,6 @@
 #!/bin/bash
 cd "/Users/mehmetyanik/parasit(e)"
 git add .
-git commit -m "style: overhaul Eco AI helper with holographic design and 3-hint limit"
+git commit -m "feat: implement global audio system, bgm, sfx, and mute toggle"
 git push origin main
 rm -- "$0"

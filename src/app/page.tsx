@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ShieldAlert, User, Cpu, Network } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MatrixRain } from "@/components/MatrixRain";
+import { useAudio } from "@/contexts/AudioContext";
 
 type IntroPhase = "matrix" | "main";
 
@@ -24,8 +25,11 @@ export default function Home() {
     sessionStorage.setItem("parasite_intro_seen", "true");
   };
 
+  const { setBGM, playSFX } = useAudio();
+
   useEffect(() => {
     setMounted(true);
+    setBGM(true);
     
     const storedName = localStorage.getItem("eco_player_name");
     if (storedName) setAlias(storedName);
@@ -67,6 +71,7 @@ export default function Home() {
     setIsLoading(true);
     saveAlias(alias);
     const code = generateRoomCode();
+    playSFX("click");
     setTimeout(() => router.push(`/room/${code}?host=true`), 500);
   };
 
@@ -80,6 +85,7 @@ export default function Home() {
     setError("");
     setIsLoading(true);
     saveAlias(alias);
+    playSFX("click");
     setTimeout(() => router.push(`/room/${joinCode.toUpperCase()}`), 500);
   };
 
