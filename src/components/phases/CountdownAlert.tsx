@@ -13,7 +13,7 @@ export default function CountdownAlert({ roomId }: CountdownAlertProps) {
   const [countdown, setCountdown] = useState(3);
   const [hasTriggered, setHasTriggered] = useState(false);
 
-  // 3-second countdown then transition to playing
+  // 3-second countdown then transition to intro (via startPlaying initializing Mission 1)
   useEffect(() => {
     if (countdown <= 0 && !hasTriggered && currentPlayer?.isHost) {
       setHasTriggered(true);

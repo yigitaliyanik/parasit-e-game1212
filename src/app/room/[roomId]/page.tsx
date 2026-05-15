@@ -10,6 +10,8 @@ import PlayingPhase from "@/components/phases/PlayingPhase";
 import GameOverScreen from "@/components/phases/GameOverScreen";
 import { Loader2 } from "lucide-react";
 
+import MissionIntro from "@/components/phases/MissionIntro";
+
 export default function RoomPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -64,6 +66,8 @@ export default function RoomPage() {
       return <BriefingPhase roomId={roomId} />;
     case "countdown_alert":
       return <CountdownAlert roomId={roomId} />;
+    case "intro":
+      return <MissionIntro roomId={roomId} />;
     case "playing":
       return <PlayingPhase roomId={roomId} />;
     case "game_over":

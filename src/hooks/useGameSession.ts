@@ -248,6 +248,28 @@ export const useGameSession = (roomId: string) => {
     }
   };
 
+  const startIntro = async () => {
+    if (!session) return;
+    try {
+      await update(ref(db, `sessions/${roomId}`), {
+        gameStatus: "intro",
+      });
+    } catch (err) {
+      console.error("[useGameSession] Error starting intro:", err);
+    }
+  };
+
+  const enterPlayingPhase = async () => {
+    if (!session) return;
+    try {
+      await update(ref(db, `sessions/${roomId}`), {
+        gameStatus: "playing",
+      });
+    } catch (err) {
+      console.error("[useGameSession] Error entering playing phase:", err);
+    }
+  };
+
   const startPlaying = async () => {
     if (!session) return;
     try {
@@ -256,7 +278,7 @@ export const useGameSession = (roomId: string) => {
       const selectedIds = shuffled.slice(0, 3).map(d => d.id);
 
       await update(ref(db, `sessions/${roomId}`), {
-        gameStatus: "playing",
+        gameStatus: "intro",
         currentMission: 1,
         task1: {
           analystFoundIds: [],
@@ -361,6 +383,7 @@ export const useGameSession = (roomId: string) => {
   const startMission2 = async () => {
     if (!session) return;
     await update(ref(db, `sessions/${roomId}`), {
+      gameStatus: "intro",
       currentMission: 2,
       task2: {
         analystUnlockRequested: false,
@@ -420,6 +443,7 @@ export const useGameSession = (roomId: string) => {
   const startMission3 = async () => {
     if (!session) return;
     await update(ref(db, `sessions/${roomId}`), {
+      gameStatus: "intro",
       currentMission: 3,
       task3: {
         executiveAccessGranted: false,
@@ -462,6 +486,7 @@ export const useGameSession = (roomId: string) => {
   const startMission4 = async () => {
     if (!session) return;
     await update(ref(db, `sessions/${roomId}`), {
+      gameStatus: "intro",
       currentMission: 4,
       task4: {
         routeChanged: false,
@@ -516,7 +541,9 @@ export const useGameSession = (roomId: string) => {
 
     // Countdown & Timer
     startCountdownAlert,
+    startIntro,
     startPlaying,
+    enterPlayingPhase,
     setGameOver,
 
     // Task 1

@@ -1,4 +1,4 @@
-export type GameStatus = "waiting" | "briefing" | "countdown_alert" | "playing" | "game_over";
+export type GameStatus = "waiting" | "briefing" | "countdown_alert" | "intro" | "playing" | "game_over";
 export type Role = "engineer" | "analyst" | "executive" | "journalist";
 
 export interface Player {
