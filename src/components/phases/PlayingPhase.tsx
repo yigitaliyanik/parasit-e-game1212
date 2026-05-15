@@ -24,6 +24,7 @@ import { Cpu, AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState, useMemo } from "react";
 import { useTypewriter } from "@/hooks/useTypewriter";
+import EcoAIHelper from "@/components/ui/EcoAIHelper";
 
 interface PlayingPhaseProps {
   roomId: string;
@@ -499,6 +500,10 @@ export default function PlayingPhase({ roomId }: PlayingPhaseProps) {
       {session.task4?.completed && (
         <VictoryScreen roomId={roomId} />
       )}
+      <EcoAIHelper 
+        role={role} 
+        missionNumber={session?.currentMission || 1} 
+      />
     </div>
   );
 }
